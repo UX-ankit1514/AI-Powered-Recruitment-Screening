@@ -2,7 +2,21 @@
 
 **Working name:** Hirefy (placeholder) · **Version:** 3 · **Date:** 2026-11-15
 **Built from:** Shubh's raw thoughts (`raw-thoughts.md`) + Tushar's two PRDs (`prd-voice-ai-screening-bolna.md`, `prd-tushar-v2-hackathon-mvp.md`).
-Where the two disagreed, this document follows Shubh's direction and marks it. Items marked *(proposal)* are suggested defaults that the team hasn't confirmed yet.
+**Order of authority:** Shubh's latest decisions (made after comparing both PRDs) override everything, including his own earlier raw thoughts and both of Tushar's PRDs. Tushar's PRDs have *not* been updated, so where they disagree with this document, this document wins. See section 0. Items marked *(proposal)* are suggested defaults that the team hasn't confirmed yet.
+
+---
+
+## 0. Where this overrides Tushar's PRDs
+
+| Topic | Tushar's PRDs say | This PRD (Shubh's decision) |
+|---|---|---|
+| Talking to a human | Candidate can ask for a human anytime; refusing recording routes to a human | **Not allowed.** The candidate speaks only with the AI. No human callback is offered or promised |
+| Call length | 6–8 minutes, hard cap 8–10 | **Early exit in 2–3 minutes** for clearly weak candidates; **up to 10 minutes** for promising ones |
+| What's scored | Skills, experience, answer quality, soft skills, confidence | Skills, experience, confidence **and culture fit**, with weights each company shapes |
+| Hidden fits | Not covered | **Flags for other role, culture standout, internship interest** |
+| Result | Score + shortlist threshold | **No / Maybe / Good / Amazing** + flags |
+| Feel of the call | 5–8 questions read by "Asha" | **Warm, story-led conversation** |
+| Cost | ₹43 per screen | **~₹85 full call, ~₹25 short exit** (phone line and Bolna fee included) |
 
 ---
 
@@ -88,7 +102,10 @@ The short exit is warm: *"Thank you so much for your time, that's really helpful
 - **Tone:** warm and conversational, never prickly. The AI is there to understand, not to judge.
 - **Upfront opening:** says plainly what the call is about in the first few seconds.
 - **Rescheduling:** the candidate can move the call to a better time, booked by the AI on the call.
-- **No "talk to a human" option.** Candidates speak with the AI only. *(Shubh's decision; overrides Tushar's PRD)*
+- **No "talk to a human" option.** Candidates speak with the AI only. *(Shubh's decision; overrides Tushar's PRDs)*
+  - The AI never offers or promises a human callback.
+  - If a candidate asks for a human, the AI warmly explains that this first conversation is with the AI and carries on: *"I understand. This first chat is with me, and it only takes a few minutes. Your answers go straight to the hiring team."*
+  - If they still don't want to talk, the AI offers to reschedule. If they decline that too, it thanks them and ends the call. The candidate is marked "declined call", with no human follow-up.
 - **Time-boxing:** if an answer runs long, the AI politely cuts in: *"Thank you so much. Anything else you'd like me to know in the next 20 seconds, and then we'll move on?"* Or it asks a focused follow-up. Off-topic answers are redirected once, then the AI moves on. Hard stop at 10 minutes.
 - **Recording consent:** see section 11. Open question on what happens if someone refuses.
 - **Languages:** English first; Hinglish as a stretch goal.
@@ -126,7 +143,7 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 - **Fits another role:** matched against the company's other open roles, with the reason.
 - **Culture standout:** strong culture fit even if the role doesn't fit.
 - **Wants an internship.**
-- **Needs a human look:** call ended early, bad audio, or the transcript looks unreliable. These are flagged, not scored low.
+- **HR to review:** the call dropped (network), the audio was bad, or the transcript looks unreliable. These are flagged for HR to look at, not scored low. *(Internal only; nothing is promised to the candidate. A planned short exit is not flagged this way.)*
 
 ### Fairness
 - The scoring AI sees the transcript only, with no name, gender or voice.
@@ -241,7 +258,7 @@ Tracker: https://recruit-screening-tracker.vercel.app
 ## 17. Open questions
 
 1. **What exactly is the canvas?** Assumed here to be the HR view (sorted list + candidate stories). Confirm.
-2. **Recording refusal:** if a candidate won't be recorded, does the call end and the candidate get marked "declined"?
+2. **Recording refusal:** a human route isn't allowed, so the proposal is that the AI thanks them, ends the call and marks them "declined recording". Confirm.
 3. **Rubric weights and pick cut-offs:** confirm or change the proposals in section 7.
 3b. **Short-exit rules:** confirm the signals in section 6 that are allowed to end a call early.
 4. **Where applicants come from** after the hackathon: which hiring platform?

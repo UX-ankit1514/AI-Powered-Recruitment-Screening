@@ -14,7 +14,7 @@
         "Problem: resume screens drop ~900 of 1,000 applicants unheard; some are strong people with weak resumes.",
         "Every applicant gets a warm phone call from a Bolna voice AI. No resume filter in front.",
         "Call length: clearly weak candidates get a polite exit in 2–3 minutes; promising ones go up to 10 minutes max.",
-        "Upfront opening about the job application; candidate can reschedule; no “talk to a human” option.",
+        "Upfront opening; candidate can reschedule. No “talk to a human” option at all — if asked, the AI explains this first chat is with it and carries on; never promises a callback.",
         "AI politely cuts in on long answers or asks a follow-up; hard stop at 15 minutes.",
         "Scored on skills, experience, confidence and culture fit. Weights and extra traits set per company (experts vs learners vs curious types).",
         "Pick: No / Maybe / Good / Amazing, with evidence quotes. HR has the final say.",
@@ -22,7 +22,8 @@
         "Cost: ~₹85 per full 10-minute call, ~₹25 per short exit.",
         "Different from HeyMilo / Hyring: we call everyone, spot other-role / culture / internship fit, and keep it a warm chat rather than a test.",
         "Team of four: Shubh, Ankit, Tushar, and one on market research.",
-        "PRD v3 written: raw thoughts + both of Tushar's PRDs."
+        "PRD v3 written: raw thoughts + both of Tushar's PRDs.",
+        "Shubh's latest decisions override earlier raw thoughts and both of Tushar's PRDs. Tushar's PRDs are not updated; PRD v3 is the master."
       ],
       "open": [
         "Tushar to agree to PRD v3 changes: call everyone from any source, ≤10 min with short exit, no human option, culture fit + hidden-fit flags, new pick labels.",
