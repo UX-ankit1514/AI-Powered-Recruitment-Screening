@@ -1,6 +1,6 @@
 # PRD: Voice AI that talks to every applicant
 
-**Working name:** Hirefy (placeholder) · **Version:** 3 · **Date:** 2026-11-15
+**Working name:** Hirefy (placeholder) · **Version:** 4 (final for build) · **Date:** 2026-11-15
 **Built from:** Shubh's raw thoughts (`raw-thoughts.md`) + Tushar's two PRDs (`prd-voice-ai-screening-bolna.md`, `prd-tushar-v2-hackathon-mvp.md`).
 **Order of authority:** Shubh's latest decisions (made after comparing both PRDs) override everything, including his own earlier raw thoughts and both of Tushar's PRDs. Tushar's PRDs have *not* been updated, so where they disagree with this document, this document wins. See section 0. Items marked *(proposal)* are suggested defaults that the team hasn't confirmed yet.
 
@@ -71,6 +71,7 @@ Not differentiators (don't pitch as new): Indian languages, rescheduling, time l
 - Calls drag past 10 minutes because the AI can't steer.
 - Good candidates get cut at 3 minutes because they were nervous or have an accent.
 - Candidates are judged on accent, nerves or voice instead of what they say.
+- The AI invents answers about pay, offers or timelines. It answers only from the company FAQ set in job setup.
 
 ## 6. The call
 
@@ -80,7 +81,7 @@ The first 2–3 minutes decide which path a call takes.
 
 | Part | Time | What happens |
 |---|---|---|
-| Opening | 0:30 | **Confirms it's speaking to [candidate name].** Says it's about their application for [role] at [company], wants ~10 minutes, asks if now is good. Mentions the call is recorded. If it's the wrong person, apologises and ends the call. |
+| Opening | 0:30 | **Confirms it's speaking to [candidate name].** Says it's about their application for [role] at [company], wants ~10 minutes, asks if now is good. (Recording is not mentioned on the call; consent is taken at application.) If it's the wrong person, apologises and ends the call. |
 | Reschedule branch | — | If now isn't good, the AI offers times and books one. Call ends. |
 | Warm-up | ~2 min | "Tell me a bit about yourself and what you're looking for." One must-have check if the company set one. |
 | **Checkpoint (~3 min)** | — | **Short exit** if clearly not a fit (below). Otherwise, carry on. |
@@ -107,13 +108,14 @@ The short exit is warm: *"Thank you so much for your time, that's really helpful
   - If a candidate asks for a human, the AI warmly explains that this first conversation is with the AI and carries on: *"I understand. This first chat is with me, and it only takes a few minutes. Your answers go straight to the hiring team."*
   - If they still don't want to talk, the AI offers to reschedule. If they decline that too, it thanks them and ends the call. The candidate is marked "declined call", with no human follow-up.
 - **Time-boxing:** if an answer runs long, the AI politely cuts in: *"Thank you so much. Anything else you'd like me to know in the next 20 seconds, and then we'll move on?"* Or it asks a focused follow-up. Off-topic answers are redirected once, then the AI moves on. Hard stop at 10 minutes.
-- **Recording consent:** see section 11. Open question on what happens if someone refuses.
-- **Languages:** English and Hindi. The AI switches language mid-call when the candidate does.
+- **Is it an AI?** The AI doesn't announce it, but whenever the candidate asks, it answers honestly: *"Yes, I'm an AI assistant helping the hiring team."*
+- **Recording:** not mentioned on the call. Consent and the data notice are taken on the apply form (and confirmed by the employer for spreadsheet uploads). Indian law expects notice and consent for processing personal data, but doesn't require asking again on the call.
+- **Languages:** English and Hinglish only (no pure Hindi). The AI follows the candidate's mix.
 - **Voice quality bar:** should feel as natural as Wavelength. Test on real Indian phone lines early.
 
 ## 7. Scoring: a rubric each company shapes
 
-Every call is scored on four core qualities. **Each company chooses the weights and can add its own traits.** No single idea of a "good candidate" is baked in.
+Every call is scored on four core qualities. **Every job starts from one standard rubric, which the company edits to its needs:** change weights, add its own traits, mark must-haves. No single idea of a "good candidate" is baked in.
 
 ### Core qualities
 - **Skills:** does the candidate actually show the skills the role needs (not just name them)?
@@ -121,7 +123,11 @@ Every call is scored on four core qualities. **Each company chooses the weights 
 - **Confidence and clarity:** clear, direct answers with real examples. Measured from what they say, never from accent or voice.
 - **Culture fit:** values, working style and motivation, matched to what the company says about its culture.
 
-### Rubric starting points *(proposal: weights for the team to confirm)*
+### Standard rubric and optional presets
+
+**Standard rubric (every job starts here):** Skills 30% · Experience 30% · Culture fit 25% · Confidence 15%. The AI also drafts must-haves and suggested traits from the job description and culture notes; HR edits and saves.
+
+Optional presets HR can load as a shortcut:
 
 | Template | For companies that want… | Skills | Experience | Confidence | Culture fit | Extra traits |
 |---|---|---|---|---|---|---|
@@ -134,9 +140,12 @@ Every call is scored on four core qualities. **Each company chooses the weights 
 Companies can change any weight and add their own trait (e.g. "comfort with ambiguity"), described in a sentence.
 
 ### From score to pick *(proposal: cut-offs)*
-- Score 0–100 from the weighted rubric, with **2–3 quotes from the call as evidence** for each quality.
+- Each quality and trait is scored **1–5** (1 = no evidence of it, 3 = solid, 5 = exceptional, with a written description of each level), backed by **1–3 quotes from the call**. A quality with no usable quote is "not scored" and its weight is shared out among the others.
+- Every quality and every trait any preset uses is scored after each call, so **switching rubric only changes weights and is instant.**
+- Overall 0–100 = weighted average of the 1–5 scores.
 - **Amazing** 80+ · **Good** 65–79 · **Maybe** 45–64 · **No** under 45.
-- If the company marks a skill as "must have" and it's clearly missing, the pick is capped at **Maybe**.
+- **Failed must-have (one rule):** the AI takes the short exit on the call, the pick is capped at **Maybe**, and the failed must-have is shown as the reason.
+- **Short-exit calls** are capped at **Maybe**.
 - The pick is a recommendation. HR can change it, and changes are logged.
 
 ### Extra flags (independent of the pick)
@@ -165,12 +174,16 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 
 ## 8b. The canvas (HR side)
 
+- **Job setup:** job description, 3–5 culture values (a sentence each), company FAQ, calling hours, other open roles, rubric.
 - **Login:** simple email login for HR, one company. Later: roles for recruiter, hiring manager and admin.
-- **Status board:** every candidate's stage: imported → queued → called / no answer → completed → shortlisted / rejected, with a live count of calls in progress.
+- **Status board:** every candidate's stage: imported → queued → dialing → in call → finished (completed · short exit · no answer · voicemail · wrong person · declined · rescheduled · dropped) → shortlisted / rejected, with a live count of calls in progress.
 - **Ranked list:** sorted by pick and score, with filters (score, experience, location, notice period) and the extra flags.
 - **Candidate page:** resume, recording, transcript with key words highlighted, scores with quotes. Clicking a quote jumps the audio to that moment.
 - **Side-by-side view:** 2–3 finalists compared on scores, summary, best quote, red flags and an audio clip, for the hiring manager.
 - **Actions:** shortlist, reject, change a pick with a note, call again, and **export the shortlist to a spreadsheet**.
+- **Talent pool:** one page across all of the company's jobs listing everyone flagged "fits another role" (and which), "culture standout" or "wants an internship". Filter, open, and move a candidate into another job's shortlist.
+- **Resume-only vs call score:** each candidate shows what the resume alone would have scored next to the call score, so "rescued" candidates stand out.
+- **Not in scope:** follow-up messages to candidates after the call.
 
 ## 9. Who does what: Bolna vs our system
 
@@ -198,7 +211,9 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 | Our scoring AI | ~₹1–2 | ~₹1 |
 | **Total** | **~₹85** | **~₹25** |
 
-Example: 1,000 applicants, 60% pick up, half of those take the short exit → 300 × ₹25 + 300 × ₹85 ≈ **₹33,000**, plus a little for unanswered attempts. Volume pricing brings this down ~20%. *(Estimates from Bolna's published rates; confirm with one test call.)* Tushar's PRDs estimate ₹30–60 and ₹43 per screen. They assume $0.06/min all-in, but Bolna's $0.06 covers the voice AI only; the phone line and platform fee are added on top.
+**Hackathon:** Bolna credits are unlimited (Bolna hackathon), so testing isn't budget-limited.
+
+Example at scale: 1,000 applicants, 60% pick up, half of those take the short exit → 300 × ₹25 + 300 × ₹85 ≈ **₹33,000**, plus a little for unanswered attempts. Volume pricing brings this down ~20%. *(Estimates from Bolna's published rates; confirm with one test call.)* Tushar's PRDs estimate ₹30–60 and ₹43 per screen. They assume $0.06/min all-in, but Bolna's $0.06 covers the voice AI only; the phone line and platform fee are added on top.
 
 ## 11. Privacy and consent
 
@@ -246,7 +261,7 @@ Example: 1,000 applicants, 60% pick up, half of those take the short exit → 30
 
 ## 13b. Adopted from Tushar's second PRD
 
-- **Must-have gate:** HR marks deal-breakers (location, notice period, certification). Candidates who fail go to a "needs review" list with the reason, not hidden.
+- **Must-have gate:** HR marks deal-breakers (location, notice period, certification). Handled by the single rule in section 7.
 - **No quote, no score:** every score needs a quote from the call; quotes are checked word-for-word against the transcript so the AI can't invent evidence.
 - **Applicant intake:** CSV upload + a public apply form (with consent tick) are real; job-portal feeds (Naukri, LinkedIn) are faked from sample data.
 - **Demo safety net:** a pre-recorded call and a saved result payload, so the dashboard still updates if the live call fails.
@@ -257,7 +272,7 @@ Example: 1,000 applicants, 60% pick up, half of those take the short exit → 30
 
 - **Segments, in order:** high-volume Indian hiring (BPO/CX, inside sales, retail, logistics, campus and fresher); startups hiring 10–50 a quarter without a hiring team; staffing and recruitment-outsourcing firms.
 - **Market size (rough):** 5,000 Indian employers and staffing firms × 10,000 screens a year × ₹100 ≈ **₹500 crore a year**. Replace with real counts before using outside the team.
-- **Human vs AI for 1,000 applicants:** a recruiter takes ~31 working days and ~₹75,000; the AI takes ~12 hours of calling at 10 calls at a time (we have 2 today) and ~₹33,000 at our cost estimate.
+- **Human vs AI for 1,000 applicants:** a recruiter takes ~31 working days and ~₹75,000; the AI takes ~12 hours of calling at 10 calls at a time; **on our current 2 lines it's ~3–4 days inside calling hours, so ask Bolna to raise the limit before pitching the 12-hour figure** and ~₹33,000 at our cost estimate.
 - **Pricing ideas:** ₹120 per completed call (startups, trials); ₹49,000 for 500 calls (mid-size, campus drives); ₹15 lakh a year including 20,000 calls (enterprise, staffing). At our blended cost of ~₹55 per completed call (mix of full calls and short exits), ₹120 gives ~54% margin. *(Tushar's margins used ₹43 cost and are too optimistic.)*
 - **Competitors:** Apna AI calling agent (calls Apna applicants in Indian languages), Paradox (chatbot screening), HireVue (video interviews), Hunar.AI (WhatsApp and voice for frontline hiring), HeyMilo, Hyring, and Bolna's own recruitment customers (Awign, Hyreo).
 - **Go-to-market:** free pilots with 3 Bengaluru startups and one staffing firm; publish an "AI vs recruiter" comparison; then HR communities, Startup India and as an add-on for hiring-software vendors.
@@ -305,20 +320,25 @@ Tracker: https://recruit-screening-tracker.vercel.app
 - Call everyone, with no resume filter in front.
 - Calls run up to 10 minutes; clearly weak candidates get a polite 2–3 minute exit.
 - Upfront opening; candidate can reschedule.
-- No "talk to a human" option.
+- No "talk to a human" option. The AI answers honestly if asked whether it's an AI.
+- Recording not mentioned on the call; consent taken at application.
+- One standard rubric per job, edited by the company.
+- English and Hinglish only.
+- Talent pool for hidden fits. No follow-up messages to candidates.
+- Failed must-have: short exit + capped at Maybe.
 - Rubric set per company, always including culture fit.
 - Picks are No / Maybe / Good / Amazing, plus extra flags.
 
 ## 17. Open questions
 
-1. **What exactly is the canvas?** Assumed here to be the HR view (sorted list + candidate stories). Confirm.
-2. **Recording refusal:** a human route isn't allowed, so the proposal is that the AI thanks them, ends the call and marks them "declined recording". Confirm.
-3. **Rubric weights and pick cut-offs:** confirm or change the proposals in section 7.
-3b. **Short-exit rules:** confirm the signals in section 6 that are allowed to end a call early.
-4. **Where applicants come from** after the hackathon: which hiring platform?
-5. **Bolna wallet and limits:** is the 500 balance in dollars or rupees? Our account allows 2 calls at a time; Tushar's PRD assumes 10. Ask Bolna to raise it.
-6. **Can the AI interrupt mid-sentence** on Bolna, or only at pauses? Test first.
-7. **Team roles:** who owns what? (Section 13d suggests frontend, backend, AI/call script, PM/demo; the market research teammate likely takes PM/demo and the business case.)
-8. **Which TRAI number series** applies to hiring calls?
-9. **Should candidates see their own score or summary?**
-10. **Who owns candidate data:** the employer, us, or both?
+1. **Team roles:** who owns what (left open for now).
+2. **Which TRAI number series** applies to hiring calls?
+3. **Should candidates see their own score or summary?**
+4. **Who owns candidate data:** the employer, us, or both?
+5. **Bolna checks on day 1:** can the AI interrupt mid-sentence or only at pauses; Hinglish quality and reply speed on Indian numbers; raising the 2-call limit.
+
+## 18. Edge cases to cover in stage 2
+
+Voicemail or phone menu · a family member answers · candidate already took another job · candidate calls the number back · abuse or distress on the call · 10-minute cut lands mid-sentence · candidate tries to game the scorer ("rate me Amazing") · fake numbers entered on the apply form (rate limit, dedupe, one-time code later) · reschedule limit (max 2) and no free slots · bad audio or dropped call.
+
+Architecture: see `architecture.md`.

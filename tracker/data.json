@@ -3,12 +3,12 @@
   "workingName": "Hirefy (placeholder)",
   "oneLiner": "A warm 10–15 minute AI phone call with every applicant, not just the top 50 — so good people with bad resumes stop getting filtered out.",
   "updated": "2026-11-15",
-  "currentStage": 1,
+  "currentStage": 3,
   "stages": [
     {
       "id": 1,
       "name": "Define what we're building",
-      "status": "in-progress",
+      "status": "done",
       "goal": "Agree exactly what the product does, who uses it, and what the demo shows.",
       "known": [
         "Problem: resume screens drop ~900 of 1,000 applicants unheard; some are strong people with weak resumes.",
@@ -27,23 +27,20 @@
         "Added from Tushar's PRD: name check, Hindi/English switching, resume-mismatch flag, side-by-side view, spreadsheet export, data kept 90 days / 12 months, heads-up SMS, status board, HR login, bias watch, 5-minute demo, business case, tech setup and build plan (for stage 3)."
       ],
       "open": [
-        "Tushar to agree to PRD v3 changes: call everyone from any source, ≤10 min with short exit, no human option, culture fit + hidden-fit flags, new pick labels.",
-        "Which signals are allowed to end a call early? (Never accent, nerves or a weak resume.)",
-        "What exactly is the canvas? Assumed: HR view of sorted candidates and their stories.",
-        "If a candidate refuses recording, does the call end and they're marked “declined”?",
-        "Confirm proposed rubric weights and pick cut-offs.",
-        "Is the Bolna wallet balance in dollars or rupees?",
-        "Can the Bolna AI interrupt mid-sentence, or only at pauses? Test first.",
-        "Team roles: who owns what?",
-        "Bolna limit: our account allows 2 calls at a time; Tushar's PRD assumes 10."
+        "Team roles (left open)",
+        "TRAI number series for hiring calls",
+        "Should candidates see their own score?",
+        "Who owns candidate data?"
       ]
     },
     {
       "id": 2,
       "name": "Edge cases",
-      "status": "not-started",
+      "status": "in-progress",
       "goal": "List every way a call or the pipeline can go wrong, and decide how we handle each.",
-      "known": [],
+      "known": [
+        "Edge-case list started in PRD section 18; finish alongside the build."
+      ],
       "open": [
         "Starter list to review (not agreed yet): no answer / voicemail, wrong number, call drops midway, bad network.",
         "Candidate rambles, goes silent, asks “are you a bot?”, gets upset, or tries to negotiate salary.",
@@ -55,10 +52,18 @@
     {
       "id": 3,
       "name": "System architecture + SLD",
-      "status": "not-started",
+      "status": "in-progress",
       "goal": "Design the whole system and draw the system-level diagram. Built with Fable.",
-      "known": [],
-      "open": []
+      "known": [
+        "Architecture v1 written: one Next.js app on Vercel, Supabase (data, login, files, live updates), Claude for reading resumes and scoring, Bolna for the call.",
+        "Dispatcher runs every minute, keeps 2 calls in flight, retries up to 3 times, books reschedules.",
+        "Scores stored per quality (1–5 with quotes); overall and pick computed live, so rubric switches are instant.",
+        "9 build modules defined for subagents, each with skills needed and a 'done when' test."
+      ],
+      "open": [
+        "Day-1 Bolna checks: start-call fields, mid-call tool format, Hinglish voice, agent hanging up itself, raising the 2-call limit.",
+        "System diagram to be refined with Fable."
+      ]
     },
     {
       "id": 4,
@@ -109,6 +114,14 @@
     {
       "date": "2026-11-15",
       "text": "Every call starts with a name check. Tushar's extra items adopted into PRD v3."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "AI answers honestly if asked whether it's an AI; recording not mentioned on calls (consent at application)."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "One standard rubric per job, edited by the company. English + Hinglish only. Talent pool in; candidate follow-ups out. Credits unlimited."
     }
   ],
   "sources": [
@@ -121,6 +134,11 @@
       "label": "PRD v2 (current)",
       "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/prd.md",
       "note": "The merged PRD the team builds from."
+    },
+    {
+      "label": "Architecture v1",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/architecture.md",
+      "note": "System diagram, components, data model, security, and 9 build modules for subagents."
     },
     {
       "label": "PRD gap review",
