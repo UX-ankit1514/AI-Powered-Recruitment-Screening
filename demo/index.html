@@ -155,13 +155,51 @@ textarea{resize:vertical;min-height:70px}
 .steps span.now{color:var(--accent-ink);font-weight:500}
 .err{color:var(--text);border-left:2px solid var(--text);padding-left:10px;margin-top:10px}
 
+/* job setup */
+.setup-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;padding-top:20px}
+.setup-grid h2{font:400 22px var(--serif);margin-bottom:4px}
+.blk{margin-top:20px}
+.blk-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.blk-head b{font-size:12px;font-weight:500;color:var(--text-2)}
+ul.edit{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+ul.edit li{display:flex;gap:6px;align-items:center}
+ul.edit li.faq{flex-direction:column;align-items:stretch;border:1px solid var(--line);border-radius:var(--r-md);padding:10px;background:var(--surface)}
+ul.edit li.mhi{padding:6px 0;border-bottom:1px solid var(--line)}
+ul.edit li.mhi span{flex:1}
+.faq-top{display:flex;gap:6px}
+.addrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.addrow input{flex:1 1 160px;width:auto}
+.btn2{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:6px 12px;cursor:pointer;color:var(--text);white-space:nowrap;font-size:13px}
+.btn2:disabled{opacity:.5;cursor:default}
+.x{flex:none;background:none;border:1px solid var(--line);border-radius:var(--r-sm);width:30px;height:30px;cursor:pointer;color:var(--text-3);font-size:16px;line-height:1}
+.x:hover{color:var(--text);border-color:var(--line-strong)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:12px}
+.sl{padding:10px 0;border-bottom:1px solid var(--line)}
+.sl-top{display:flex;align-items:center;gap:10px}
+.sl-top label{flex:1;font-weight:500}
+.pct{font-weight:500;min-width:40px;text-align:right}
+.sl-desc{font-size:12px;color:var(--text-3);margin-top:2px}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);margin:6px 0 0}
+input[type=file]{padding:6px}
+.mh.na{color:var(--text-3)}
+/* resume */
+.resumebox{border:1px solid var(--line);border-radius:var(--r-md);background:var(--sunken);padding:12px 14px}
+.resumebox dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:6px 0 0}
+.resumebox dt{color:var(--text-3);font-size:12px}
+.resumebox dd{margin:0}
+.rscore{font:400 18px var(--serif);margin-top:10px}
+.resumebox ol{margin:4px 0 0;padding-left:20px}
+.resumebox ol li{margin:4px 0}
+.btnrow{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btnrow .btn{grid-column:auto}
+
 [hidden]{display:none!important}
 @media (max-width:860px){
   .wrap{padding:0 16px 60px}
   h1{font-size:24px}
   .counts{gap:20px}
   .col-sum{display:none}
-  .live-grid{grid-template-columns:1fr;gap:24px}
+  .live-grid,.setup-grid{grid-template-columns:1fr;gap:24px}
   aside{padding:18px 16px 40px}
 }
 @media (max-width:560px){
@@ -183,6 +221,7 @@ textarea{resize:vertical;min-height:70px}
   </header>
 
   <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="setup" aria-selected="false">Job setup</button>
     <button class="tab" role="tab" data-tab="rank" aria-selected="true">Ranking</button>
     <button class="tab" role="tab" data-tab="pool" aria-selected="false">Talent pool<span class="n" id="poolN"></span></button>
     <button class="tab" role="tab" data-tab="live" aria-selected="false">Live call</button>
@@ -193,12 +232,51 @@ textarea{resize:vertical;min-height:70px}
       <span class="label">Hiring for</span>
       <div class="seg" id="seg" role="group" aria-label="Rubric preset"></div>
       <span class="weights" id="weights"></span>
+      <button type="button" class="linkbtn" data-goto="setup">Edit rubric</button>
+      <button type="button" class="linkbtn" id="clearLive" hidden>Clear live</button>
     </div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>#</th><th>Candidate</th><th>Pick</th><th>Overall</th><th>Resume vs call</th><th class="col-flags">Flags</th><th class="col-sum">Summary</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
+    </div>
+  </section>
+
+  <section id="view-setup" hidden>
+    <div class="setup-grid">
+      <div>
+        <h2>The role</h2>
+        <p class="hint">What the interviewer knows about the job and the company.</p>
+        <div class="f"><label for="s-jd">Job description</label><textarea id="s-jd" rows="9"></textarea></div>
+        <div class="blk">
+          <div class="blk-head"><b>Culture values</b><span class="label">3 to 5 work best</span></div>
+          <ul class="edit" id="valList"></ul>
+          <div class="addrow" id="valAdd"><input id="valIn" placeholder="Add a value" aria-label="New culture value"><button type="button" class="btn2" data-act="addVal">Add</button></div>
+        </div>
+        <div class="blk">
+          <div class="blk-head"><b>Company FAQ</b><span class="label">Answers the interviewer can give</span></div>
+          <ul class="edit" id="faqList"></ul>
+          <div class="addrow"><button type="button" class="btn2" data-act="addFaq">Add question</button></div>
+        </div>
+      </div>
+      <div>
+        <h2>Rubric</h2>
+        <p class="hint">Weights always add up to 100%. The ranking updates as you move them.</p>
+        <div class="toolbar" style="padding-top:0"><span class="label">Start from</span><div class="seg" id="segSetup" role="group" aria-label="Rubric preset"></div></div>
+        <div id="sliders"></div>
+        <p class="err" id="wWarn" hidden>Every weight is zero. Raise at least one to rank candidates.</p>
+        <div class="blk">
+          <div class="blk-head"><b>Add custom trait</b><span class="label">Not scored on past calls, so it is skipped until it is</span></div>
+          <div class="addrow"><input id="trName" placeholder="Name, e.g. Resilience" aria-label="Trait name"><input id="trDesc" placeholder="One line on what good looks like" aria-label="Trait description"><button type="button" class="btn2" data-act="addTrait">Add trait</button></div>
+          <p class="err" id="trErr" hidden></p>
+        </div>
+        <div class="blk">
+          <div class="blk-head"><b>Must-haves</b><span class="label">Failing one holds a candidate at Maybe</span></div>
+          <ul class="edit" id="mhList"></ul>
+          <div class="addrow"><input id="mhIn" placeholder="Add a must-have" aria-label="New must-have"><button type="button" class="btn2" data-act="addMh">Add</button></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -216,23 +294,27 @@ textarea{resize:vertical;min-height:70px}
     <div class="live-grid">
       <div>
         <h2>Call a candidate now</h2>
-        <p class="hint">Hirefy phones them, runs the screen, and adds them to the ranking when the call ends.</p>
+        <p class="hint">Talk to the AI interviewer right here in the browser, or have Hirefy phone the candidate. Either way they are scored and added to the ranking when the call ends.</p>
         <form id="callForm" autocomplete="off">
           <div class="f full"><label for="f-pass">Passcode</label><input id="f-pass" type="password" required></div>
+          <div class="f full"><label for="f-resume">Resume (PDF, Word or text) — optional</label><input id="f-resume" type="file" accept=".pdf,.txt,.docx"></div>
+          <div class="f full" id="resumeWrap" hidden><div class="resumebox" id="resumeBox" aria-live="polite"></div></div>
           <div class="f"><label for="f-name">Candidate name</label><input id="f-name" required></div>
           <div class="f"><label for="f-phone">Phone</label><input id="f-phone" type="tel" placeholder="+91 98765 43210" value="+91" required></div>
           <div class="f"><label for="f-role">Role</label><input id="f-role" value="Sales Executive" required></div>
           <div class="f"><label for="f-co">Company</label><input id="f-co" value="Acme SaaS" required></div>
           <div class="f full"><label for="f-note">Short resume note</label><textarea id="f-note" placeholder="e.g. 2 years inside sales at an edtech, B.Com, no SaaS experience"></textarea></div>
-          <button class="btn" id="callBtn" type="submit">Call now</button>
+          <div class="btnrow"><button class="btn" id="webBtn" type="button">Talk in browser</button><button class="btn2" id="callBtn" type="submit">Call phone</button><button class="btn2" id="sampleBtn" type="button">Run sample call (backup)</button></div>
+          <p class="label" style="grid-column:1/-1">Talking in the browser needs your microphone. Allow microphone when asked. The phone number is only needed for a phone call.</p>
         </form>
       </div>
       <div>
         <div class="status" id="statusBox" aria-live="polite">
           <span class="label">Call status</span>
           <div class="big"><span class="dot" id="sDot"></span><span id="sLabel">No call in progress</span></div>
-          <div class="label" id="sSub">Fill in the form and press Call now.</div>
+          <div class="label" id="sSub">Fill in the form and press Talk in browser.</div>
           <div class="steps" id="sSteps"></div>
+          <div class="btnrow" id="webCtl" style="margin-top:14px" hidden><span class="chip" id="micChip">Mic on</span><button class="btn2" id="muteBtn" type="button">Mute</button><button class="btn2" id="hangBtn" type="button">Hang up</button></div>
           <div class="err" id="sErr" hidden></div>
         </div>
       </div>
@@ -389,18 +471,46 @@ mk('Harpreet Kaur',84,[
  ],[1,0,1],{},'Would rank Good on ability, but she will not relocate from Chandigarh. Held at Maybe on that must-have.')
 ];
 
-var state = {preset:'balanced', sel:null};
+var JD = 'Sales Executive, B2B SaaS (Bengaluru)\n\nAcme SaaS sells workflow software to mid-market sales teams. You will own the full cycle for inbound and outbound leads: discovery, demos, negotiation and close, against a monthly quota.\n\nYou will do well here if you can run a sharp discovery call, handle objections calmly, keep a clean pipeline in the CRM and tell a customer story that sticks. 1 to 4 years in a customer-facing sales role. SaaS experience is a plus, not a requirement.';
+var state = {preset:'balanced', sel:null, w:{}, traits:[], mh:MH.slice(),
+  jd:JD, values:['Ownership','Curiosity','Customer first'],
+  faq:[{q:'Is the role remote?',a:'Hybrid: three days a week in our Indiranagar office.'},{q:'How is pay structured?',a:'Fixed salary plus monthly incentives on closed revenue, uncapped.'}]};
+var traitN=0;
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function $(id){ return document.getElementById(id); }
-function preset(){ return PRESETS.filter(function(p){return p.id===state.preset;})[0]; }
+function preset(){
+  var p=PRESETS.filter(function(x){return x.id===state.preset;})[0];
+  return {id:state.preset, name:p?p.name:'Custom', w:state.w};
+}
+function allQuals(){ return QUALS.concat(state.traits.map(function(t){return [t.key,t.name];})); }
+function qlabel(k){ var t=allQuals().filter(function(x){return x[0]===k;})[0]; return t?t[1]:k; }
+function loadPreset(id){
+  var p=PRESETS.filter(function(x){return x.id===id;})[0]; if(!p) return;
+  state.preset=id; state.w={};
+  allQuals().forEach(function(k){ state.w[k[0]]=p.w[k[0]]||0; });
+}
+// whole-number percentages that always add up to 100
+function pcts(w){
+  var keys=Object.keys(w).filter(function(k){return w[k]>0;}), tot=0, out={}, used=0;
+  keys.forEach(function(k){tot+=w[k];});
+  Object.keys(w).forEach(function(k){out[k]=0;});
+  if(!tot) return out;
+  var fr=keys.map(function(k){ var v=w[k]/tot*100; out[k]=Math.floor(v); used+=out[k]; return [k,v-out[k]]; });
+  fr.sort(function(a,b){return b[1]-a[1];});
+  for(var i=0;i<100-used;i++) out[fr[i%fr.length][0]]++;
+  return out;
+}
+// a must-have result counts if it is still on the list, or came from outside the editable list
+function mhCounts(m){ return state.mh.indexOf(m.text)>=0 || MH.indexOf(m.text)<0; }
+function badge(c){ return c.live?'<span class="badge">'+(c.sample?'Sample':'Live')+'</span>':''; }
 
 function score(c, p){
   var w=(p||preset()).w, sum=0, tot=0;
   for(var k in w){ var s=c.qualities[k] && c.qualities[k].score; if(typeof s==='number'){ sum+=s*w[k]; tot+=w[k]; } }
   var overall = tot ? Math.round((sum/tot-1)/4*100) : 0;
   var pick = overall>=80?'Amazing':overall>=65?'Good':overall>=45?'Maybe':'No';
-  var failed = c.must_have_results.some(function(m){return m.met===false;});
+  var failed = c.must_have_results.some(function(m){return m.met===false && mhCounts(m);});
   var capped = false;
   if((c.short_exit||failed) && (pick==='Amazing'||pick==='Good')){ pick='Maybe'; capped=true; }
   return {overall:overall, pick:pick, capped:capped, why:c.short_exit?'call ended early':'must-have not met'};
@@ -430,8 +540,13 @@ function inPool(c){ var f=c.flags; return f.other_role||f.culture_standout||f.wa
 
 function render(){
   var list=ranked(), p=preset();
-  $('seg').innerHTML = PRESETS.map(function(x){return '<button type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===state.preset)+'">'+x.name+'</button>';}).join('');
-  $('weights').innerHTML = Object.keys(p.w).map(function(k){return QLABEL[k]+' <b>'+p.w[k]+'</b>';}).join(' &middot; ');
+  var segH = PRESETS.map(function(x){return '<button type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===state.preset)+'">'+x.name+'</button>';}).join('')+
+    (state.preset==='custom'?'<button type="button" aria-pressed="true">Custom</button>':'');
+  $('seg').innerHTML = segH; $('segSetup').innerHTML = segH;
+  var pc=pcts(p.w);
+  $('weights').innerHTML = Object.keys(pc).filter(function(k){return pc[k]>0;}).sort(function(a,b){return pc[b]-pc[a];}).map(function(k){return esc(qlabel(k))+' <b>'+pc[k]+'%</b>';}).join(' &middot; ') || 'No weights set';
+  var nLive=C.filter(function(c){return c.live;}).length;
+  $('clearLive').hidden=!nLive; $('clearLive').textContent='Clear live ('+nLive+')';
   var n={Amazing:0,Good:0};
   list.forEach(function(x){ if(n[x.s.pick]!=null) n[x.s.pick]++; });
   $('counts').innerHTML =
@@ -443,7 +558,7 @@ function render(){
     var c=x.c, s=x.s;
     return '<tr tabindex="0" data-id="'+c.id+'" class="'+(c.live?'live ':'')+(state.sel===c.id?'sel':'')+'">'+
       '<td class="rank">'+(i+1)+'</td>'+
-      '<td class="name">'+esc(c.name)+(c.live?'<span class="badge">Live</span>':'')+'</td>'+
+      '<td class="name">'+esc(c.name)+badge(c)+'</td>'+
       '<td>'+pickChip(s)+(s.capped?'<span class="capnote">Held: '+s.why+'</span>':'')+'</td>'+
       '<td class="overall">'+s.overall+'</td>'+
       '<td>'+gap(c,s)+'</td>'+
@@ -454,7 +569,7 @@ function render(){
   $('poolN').textContent = pool.length;
   $('poolRows').innerHTML = pool.length ? pool.map(function(x){
     var c=x.c;
-    return '<tr tabindex="0" data-id="'+c.id+'"><td class="name">'+esc(c.name)+(c.live?'<span class="badge">Live</span>':'')+'</td>'+
+    return '<tr tabindex="0" data-id="'+c.id+'"><td class="name">'+esc(c.name)+badge(c)+'</td>'+
       '<td><div class="chips">'+flagChips(c)+'</div></td><td>'+pickChip(x.s)+' <span class="gap">&nbsp;'+x.s.overall+'</span></td>'+
       '<td class="summary col-sum">'+esc(c.summary)+'</td></tr>';
   }).join('') : '<tr><td colspan="4" class="empty">Nobody flagged yet.</td></tr>';
@@ -466,9 +581,9 @@ function safeUrl(u){ return typeof u==='string' && /^https?:\/\//i.test(u) ? u :
 
 function renderPanel(){
   var c=C.filter(function(x){return x.id===state.sel;})[0]; if(!c) return;
-  var s=score(c), w=preset().w, f=c.flags;
+  var s=score(c), w=pcts(preset().w), f=c.flags;
   var h='<button class="close" id="closeBtn" type="button">Close</button>'+
-    '<h2>'+esc(c.name)+(c.live?'<span class="badge">Live</span>':'')+'</h2>'+
+    '<h2>'+esc(c.name)+badge(c)+'</h2>'+
     '<div class="phead">'+pickChip(s)+'<span class="overall">'+s.overall+'</span>'+gap(c,s)+
     (typeof c.duration_s==='number'?'<span>'+Math.floor(c.duration_s/60)+'m '+Math.round(c.duration_s%60)+'s call</span>':'')+'</div>'+
     (s.capped?'<p class="capnote">Held at Maybe: '+s.why+'.</p>':'')+
@@ -476,16 +591,20 @@ function renderPanel(){
   var rec=safeUrl(c.recording_url);
   if(rec) h+='<h3>Recording</h3><audio controls preload="none" src="'+esc(rec)+'"></audio>';
   h+='<h3>Qualities <span style="text-transform:none;letter-spacing:0">· weights for '+esc(preset().name)+'</span></h3>';
-  QUALS.forEach(function(k){
+  allQuals().forEach(function(k){
     var qq=c.qualities[k[0]]||{score:null,reason:NE,quotes:[]}, has=typeof qq.score==='number';
-    h+='<div class="q'+(has?'':' unscored')+'"><div class="qtop"><span class="qname">'+k[1]+'</span>'+
-      '<span class="qw">'+(w[k[0]]?'weight '+w[k[0]]:'not weighted')+'</span>'+pips(has?qq.score:0)+
+    h+='<div class="q'+(has?'':' unscored')+'"><div class="qtop"><span class="qname">'+esc(k[1])+'</span>'+
+      '<span class="qw">'+(w[k[0]]?'weight '+w[k[0]]+'%':'not weighted')+'</span>'+pips(has?qq.score:0)+
       '<span class="qscore">'+(has?qq.score+'/5':'n/a')+'</span></div>'+
       '<div class="qreason">'+esc(qq.reason||NE)+'</div>'+
       (qq.quotes||[]).slice(0,2).map(function(t){return '<blockquote>“'+esc(t)+'”</blockquote>';}).join('')+'</div>';
   });
-  h+='<h3>Must-haves</h3><ul class="plain">'+(c.must_have_results.length?c.must_have_results.map(function(m){
-    return '<li><span class="mh'+(m.met?'':' no')+'">'+(m.met?'Met':'Not met')+'</span><span>'+esc(m.text)+'</span></li>';}).join(''):'<li class="label">None set.</li>')+'</ul>';
+  var mres=c.must_have_results.filter(mhCounts), seen=mres.map(function(m){return m.text;});
+  var mrows=mres.map(function(m){
+    return '<li><span class="mh'+(m.met?'':' no')+'">'+(m.met?'Met':'Not met')+'</span><span>'+esc(m.text)+'</span></li>';}).concat(
+    state.mh.filter(function(t){return seen.indexOf(t)<0;}).map(function(t){
+    return '<li><span class="mh na">Not asked</span><span>'+esc(t)+'</span></li>';}));
+  h+='<h3>Must-haves</h3><ul class="plain">'+(mrows.length?mrows.join(''):'<li class="label">None set.</li>')+'</ul>';
   h+='<h3>Flags</h3>';
   var fl=flagChips(c);
   h+= fl ? '<div class="chips">'+fl+'</div>' : '<p class="label">No flags.</p>';
@@ -506,14 +625,72 @@ function closePanel(){
   render();
   var r=document.querySelector('tr[data-id="'+id+'"]'); if(r && r.offsetParent) r.focus();
 }
+/* ---------- job setup ---------- */
+function renderSliders(){
+  var pc=pcts(state.w);
+  $('sliders').innerHTML = allQuals().map(function(k){
+    var t=state.traits.filter(function(x){return x.key===k[0];})[0];
+    return '<div class="sl"><div class="sl-top"><label for="w-'+k[0]+'">'+esc(k[1])+'</label>'+
+      '<span class="pct" data-pct="'+k[0]+'">'+pc[k[0]]+'%</span>'+
+      (t?'<button type="button" class="x" data-del-trait="'+k[0]+'" aria-label="Remove '+esc(k[1])+'">×</button>':'')+'</div>'+
+      (t?'<div class="sl-desc">'+(t.desc?esc(t.desc)+' · ':'')+'no candidate scored on this yet</div>':'')+
+      '<input type="range" min="0" max="100" step="5" id="w-'+k[0]+'" data-k="'+k[0]+'" value="'+(state.w[k[0]]||0)+'"></div>';
+  }).join('');
+  updatePcts();
+}
+function updatePcts(){
+  var pc=pcts(state.w), any=false;
+  [].forEach.call(document.querySelectorAll('[data-pct]'),function(el){ el.textContent=pc[el.dataset.pct]+'%'; });
+  for(var k in state.w) if(state.w[k]>0) any=true;
+  $('wWarn').hidden=any;
+}
+function renderLists(){
+  $('valList').innerHTML = state.values.map(function(v,i){
+    return '<li><input value="'+esc(v)+'" data-val="'+i+'" aria-label="Culture value '+(i+1)+'"><button type="button" class="x" data-del-val="'+i+'" aria-label="Remove '+esc(v)+'">×</button></li>';}).join('');
+  $('valAdd').hidden = state.values.length>=5;
+  $('faqList').innerHTML = state.faq.map(function(f,i){
+    return '<li class="faq"><div class="faq-top"><input value="'+esc(f.q)+'" data-faq-q="'+i+'" placeholder="Question" aria-label="FAQ question '+(i+1)+'">'+
+      '<button type="button" class="x" data-del-faq="'+i+'" aria-label="Remove question">×</button></div>'+
+      '<textarea data-faq-a="'+i+'" placeholder="Answer" aria-label="FAQ answer '+(i+1)+'" style="min-height:50px">'+esc(f.a)+'</textarea></li>';}).join('');
+  $('mhList').innerHTML = state.mh.length ? state.mh.map(function(t,i){
+    return '<li class="mhi"><span>'+esc(t)+'</span><button type="button" class="x" data-del-mh="'+i+'" aria-label="Remove '+esc(t)+'">×</button></li>';}).join('')
+    : '<li class="label">No must-haves. Nobody is held back.</li>';
+}
+function setupAct(a){
+  if(a==='addVal'){ var v=$('valIn').value.trim(); if(!v||state.values.length>=5) return; state.values.push(v); $('valIn').value=''; renderLists(); if(!$('valAdd').hidden) $('valIn').focus(); }
+  else if(a==='addFaq'){ state.faq.push({q:'',a:''}); renderLists(); var qs=document.querySelectorAll('[data-faq-q]'); qs[qs.length-1].focus(); }
+  else if(a==='addMh'){ var m=$('mhIn').value.trim(); if(!m||state.mh.indexOf(m)>=0) return; state.mh.push(m); $('mhIn').value=''; renderLists(); render(); $('mhIn').focus(); }
+  else if(a==='addTrait'){
+    var n=$('trName').value.trim(), d=$('trDesc').value.trim();
+    $('trErr').hidden=true;
+    if(!n){ $('trErr').textContent='Give the trait a name.'; $('trErr').hidden=false; $('trName').focus(); return; }
+    if(allQuals().some(function(k){return k[1].toLowerCase()===n.toLowerCase();})){ $('trErr').textContent='There is already a trait called '+n+'.'; $('trErr').hidden=false; return; }
+    var key='x'+(++traitN);
+    state.traits.push({key:key,name:n,desc:d}); state.w[key]=10; state.preset='custom';
+    $('trName').value=''; $('trDesc').value='';
+    renderSliders(); render();
+  }
+}
+
 function showTab(t){
-  ['rank','pool','live'].forEach(function(x){ $('view-'+x).hidden = x!==t; });
+  ['setup','rank','pool','live'].forEach(function(x){ $('view-'+x).hidden = x!==t; });
   [].forEach.call(document.querySelectorAll('.tab'),function(b){ b.setAttribute('aria-selected', b.dataset.tab===t); });
 }
 
 document.addEventListener('click',function(e){
   var t=e.target;
-  var pb=t.closest('[data-p]'); if(pb){ state.preset=pb.dataset.p; render(); return; }
+  var pb=t.closest('[data-p]'); if(pb){ loadPreset(pb.dataset.p); renderSliders(); render(); return; }
+  var go=t.closest('[data-goto]'); if(go){ showTab(go.dataset.goto); return; }
+  var ac=t.closest('[data-act]'); if(ac){ setupAct(ac.dataset.act); return; }
+  if(t.closest('[data-del-val]')){ state.values.splice(+t.closest('[data-del-val]').dataset.delVal,1); renderLists(); return; }
+  if(t.closest('[data-del-faq]')){ state.faq.splice(+t.closest('[data-del-faq]').dataset.delFaq,1); renderLists(); return; }
+  if(t.closest('[data-del-mh]')){ state.mh.splice(+t.closest('[data-del-mh]').dataset.delMh,1); renderLists(); render(); return; }
+  var dt=t.closest('[data-del-trait]'); if(dt){
+    var k=dt.dataset.delTrait;
+    state.traits=state.traits.filter(function(x){return x.key!==k;}); delete state.w[k]; state.preset='custom';
+    renderSliders(); render(); return;
+  }
+  if(t.id==='clearLive'){ clearLive(); return; }
   var tb=t.closest('.tab'); if(tb){ showTab(tb.dataset.tab); return; }
   if(t.id==='closeBtn'||t.id==='scrim'){ closePanel(); return; }
   var tr=t.closest('tr[data-id]'); if(tr) openPanel(tr.dataset.id);
@@ -521,6 +698,18 @@ document.addEventListener('click',function(e){
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape' && state.sel){ closePanel(); return; }
   if((e.key==='Enter'||e.key===' ') && e.target.matches && e.target.matches('tr[data-id]')){ e.preventDefault(); openPanel(e.target.dataset.id); }
+  if(e.key==='Enter'){
+    var map={valIn:'addVal',mhIn:'addMh',trName:'addTrait',trDesc:'addTrait'};
+    if(map[e.target.id]){ e.preventDefault(); setupAct(map[e.target.id]); }
+  }
+});
+document.addEventListener('input',function(e){
+  var t=e.target, d=t.dataset||{};
+  if(d.k){ state.w[d.k]=+t.value; state.preset='custom'; updatePcts(); render(); }
+  else if(d.val!=null){ state.values[+d.val]=t.value; }
+  else if(d.faqQ!=null){ state.faq[+d.faqQ].q=t.value; }
+  else if(d.faqA!=null){ state.faq[+d.faqA].a=t.value; }
+  else if(t.id==='s-jd'){ state.jd=t.value; }
 });
 
 /* ---------- live call ---------- */
@@ -539,7 +728,28 @@ var STATUS = {
   'error':['Call failed','Something went wrong during the call.',-1]
 };
 var STEPS=['Dialling','Ringing','On call','Scoring','Ranked'];
-var timer=null, liveN=0;
+var timer=null, liveN=0, busy=false, resume=null, callResumeScore=null;
+var LS_KEY='hirefy.live.v1', webCall=null;
+
+function saveLive(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(C.filter(function(c){return c.live;}))); }catch(e){}
+}
+function loadLive(){
+  var arr=[];
+  try{ arr=JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ arr=[]; }
+  if(!Array.isArray(arr)) return;
+  arr.forEach(function(c){
+    if(!c || typeof c!=='object' || !c.qualities || !Array.isArray(c.must_have_results) || !c.flags) return;
+    c.live=true; c.id='live'+(++liveN); c.name=String(c.name||'Candidate');
+    C.push(c);
+  });
+}
+function clearLive(){
+  if(state.sel && /^live/.test(state.sel)) closePanel();
+  for(var i=C.length-1;i>=0;i--) if(C[i].live) C.splice(i,1);
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  render();
+}
 
 function setStatus(label, sub, step, active){
   $('sLabel').textContent=label; $('sSub').textContent=sub||'';
@@ -547,15 +757,23 @@ function setStatus(label, sub, step, active){
   $('sSteps').innerHTML = step==null||step<0 ? '' : STEPS.map(function(s,i){return '<span class="'+(i<step?'done':i===step?'now':'')+'">'+(i+1)+'. '+s+'</span>';}).join('');
 }
 function setErr(m){ $('sErr').hidden=!m; $('sErr').textContent=m||''; }
-function finish(){ if(timer){clearTimeout(timer);timer=null;} $('callBtn').disabled=false; $('callBtn').textContent='Call now'; }
+function finish(){ if(timer){clearTimeout(timer);timer=null;} busy=false; $('callBtn').disabled=false; $('callBtn').textContent='Call phone'; $('sampleBtn').disabled=false; $('webBtn').disabled=false; $('webCtl').hidden=true; webCall=null; }
+function readJson(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok||j.error) throw new Error(j.error||('Server replied '+res.status)); return j; }); }
+function netMsg(err, fallback){ return err && err.message && err.message!=='Failed to fetch' ? err.message : fallback; }
+function landResult(name, r, sample){
+  var c=addLive(name, r, sample);
+  saveLive();
+  setStatus('Ranked', name+' has been scored and added to the ranking.', 5, false);
+  finish(); showTab('rank'); openPanel(c.id);
+}
 
-function addLive(name, r){
+function addLive(name, r, sample){
   var qs={}; QUALS.forEach(function(k){
     var x=(r.qualities||{})[k[0]]||{}, sc=Number(x.score);
     qs[k[0]]={score:(x.score!=null && sc>=1 && sc<=5)?sc:null, reason:x.reason||NE, quotes:Array.isArray(x.quotes)?x.quotes.map(String):[]};
   });
   var f=r.flags||{};
-  var c={id:'live'+(++liveN), live:true, name:name, qualities:qs,
+  var c={id:'live'+(++liveN), live:true, sample:!!sample, name:name, qualities:qs,
     resume_only_score: typeof r.resume_only_score==='number'?r.resume_only_score:null,
     must_have_results:(Array.isArray(r.must_have_results)?r.must_have_results:[]).map(function(m){return {text:String(m.text||''), met:m.met!==false};}),
     flags:{other_role:f.other_role||null, culture_standout:!!f.culture_standout, wants_internship:!!f.wants_internship, resume_mismatch:Array.isArray(f.resume_mismatch)?f.resume_mismatch.map(String):[]},
@@ -571,9 +789,8 @@ function poll(id, pass, name, fails){
     setErr('');
     var st=String(j.status||'').toLowerCase(), m=STATUS[st];
     if(j.done && j.result){
-      var c=addLive(name, j.result);
-      setStatus('Ranked', name+' has been scored and added to the ranking.', 5, false);
-      finish(); showTab('rank'); openPanel(c.id); return;
+      if(typeof callResumeScore==='number') j.result.resume_only_score=callResumeScore;
+      landResult(name, j.result, false); return;
     }
     if(j.done){
       setStatus(m?m[0]:'Call ended', (m&&m[2]<0?m[1]:'The call ended without a conversation to score.')+' Nothing was added to the ranking.', null, false);
@@ -593,14 +810,17 @@ function poll(id, pass, name, fails){
 
 $('callForm').addEventListener('submit',function(e){
   e.preventDefault();
-  if(timer) return;
+  if(timer||busy) return;
   var name=$('f-name').value.trim(), phone=$('f-phone').value.replace(/[\s-]/g,''), pass=$('f-pass').value;
   setErr('');
   if(!/^\+91[6-9]\d{9}$/.test(phone)){ setErr('Enter an Indian mobile number as +91 followed by 10 digits.'); $('f-phone').focus(); return; }
-  $('callBtn').disabled=true; $('callBtn').textContent='Calling…';
+  busy=true; $('callBtn').disabled=true; $('callBtn').textContent='Calling…'; $('sampleBtn').disabled=true; $('webBtn').disabled=true;
+  callResumeScore = resume && typeof resume.resume_only_score==='number' ? resume.resume_only_score : null;
+  var rq=(resume && Array.isArray(resume.resume_questions)) ? resume.resume_questions : [];
   setStatus('Dialling…','Placing the call to '+name+'.',0,true);
   fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({passcode:pass,name:name,phone:phone,role:$('f-role').value.trim(),company:$('f-co').value.trim(),resume_note:$('f-note').value.trim()})})
+    body:JSON.stringify({passcode:pass,name:name,phone:phone,role:$('f-role').value.trim(),company:$('f-co').value.trim(),resume_note:$('f-note').value.trim(),
+      resume_q1:String(rq[0]||''),resume_q2:String(rq[1]||'')})})
   .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ return {ok:res.ok,status:res.status,j:j}; }); })
   .then(function(r){
     if(r.j.error || !r.j.execution_id) throw new Error(r.j.error || ('Server replied '+r.status));
@@ -613,6 +833,172 @@ $('callForm').addEventListener('submit',function(e){
   });
 });
 
+/* ---------- talk in browser ---------- */
+var BOLNA='https://cdn.jsdelivr.net/gh/bolna-ai/web-call@v3.0.1/dist/bolna-web-call.min.js';
+var WEBSTATE={
+  'idle':['Getting ready…','Setting up the call.',0,true],
+  'connecting':['Connecting…','Allow microphone when asked.',0,true],
+  'ringing':['Connecting…','Allow microphone when asked.',1,true],
+  'connected':['On call','Speak normally. The screen usually takes 6 to 10 minutes.',2,true],
+  'active':['On call','Speak normally. The screen usually takes 6 to 10 minutes.',2,true],
+  'ending':['Ending call…','Wrapping up.',3,true],
+  'ended':['Scoring…','Call ended. Reading the transcript and scoring.',3,true],
+  'disconnected':['Scoring…','Call ended. Reading the transcript and scoring.',3,true]
+};
+function micUi(){
+  var m=false;
+  try{ if(webCall && typeof webCall.isMuted==='function') m=!!webCall.isMuted(); }catch(e){}
+  $('micChip').textContent=m?'Muted':'Mic on'; $('muteBtn').textContent=m?'Unmute':'Mute';
+}
+$('webBtn').addEventListener('click',function(){
+  if(timer||busy) return;
+  var pass=$('f-pass').value, name=$('f-name').value.trim();
+  setErr('');
+  if(!pass){ setErr('Enter the passcode first.'); $('f-pass').focus(); return; }
+  if(!name){ setErr('Enter the candidate name.'); $('f-name').focus(); return; }
+  busy=true; $('webBtn').disabled=true; $('callBtn').disabled=true; $('sampleBtn').disabled=true;
+  callResumeScore = resume && typeof resume.resume_only_score==='number' ? resume.resume_only_score : null;
+  var rq=(resume && Array.isArray(resume.resume_questions)) ? resume.resume_questions : [];
+  var ended=false;
+  setStatus('Getting ready…','Loading the in-browser call.',0,true);
+  loadScript(BOLNA).then(function(){
+    if(typeof window.BolnaWebCall!=='function') throw new Error('The in-browser call could not load. Try the sample call instead.');
+    var call=webCall=new window.BolnaWebCall({
+      sessionUrl:'/api/session?passcode='+encodeURIComponent(pass),
+      userData:{name:name, role:$('f-role').value.trim(), company:$('f-co').value.trim(), resume_note:$('f-note').value.trim(), resume_q1:String(rq[0]||''), resume_q2:String(rq[1]||'')}
+    });
+    call.on('state-change',function(st){
+      if(ended) return;
+      var k=String(st&&st.state||st||'').toLowerCase(), m=WEBSTATE[k];
+      if(m) setStatus(m[0],m[1],m[2],m[3]);
+      $('webCtl').hidden = !(k==='connected'||k==='active');
+      micUi();
+    });
+    call.on('error',function(e){ setErr((e&&e.message)||'Something went wrong with the in-browser call.'); });
+    call.on('call-end',function(info){
+      if(ended) return; ended=true;
+      $('webCtl').hidden=true;
+      var id=null; try{ id=typeof call.getRunId==='function'?call.getRunId():null; }catch(e){}
+      webCall=null;
+      if(!id){ setStatus('Call ended','We could not find this call to score it'+(info&&info.reason?' ('+info.reason+')':'')+'. Nothing was added to the ranking.',null,false); finish(); return; }
+      setStatus('Scoring…','Call ended. Reading the transcript and scoring.',3,true);
+      timer=setTimeout(function(){poll(id,pass,name,0);},2000);
+    });
+    return call.start();
+  }).catch(function(err){
+    if(ended) return; ended=true;
+    try{ if(webCall && typeof webCall.stop==='function') webCall.stop(); }catch(e){}
+    var msg=netMsg(err,'Could not start the in-browser call.');
+    if(err && /permission|notallowed|denied/i.test((err.name||'')+' '+msg)) msg='Microphone access was blocked. Allow the microphone for this page and try again.';
+    setStatus('Could not start the call','',null,false); setErr(msg); finish();
+  });
+});
+$('hangBtn').addEventListener('click',function(){
+  try{ if(webCall && typeof webCall.stop==='function') webCall.stop(); }catch(e){ setErr(e.message||'Could not hang up.'); }
+});
+$('muteBtn').addEventListener('click',function(){
+  var c=webCall; if(!c) return;
+  try{
+    var m=typeof c.isMuted==='function'?!!c.isMuted():$('muteBtn').textContent==='Unmute';
+    if(m){ if(typeof c.unmute==='function') c.unmute(); else if(typeof c.setMuted==='function') c.setMuted(false); else if(typeof c.mute==='function') c.mute(false); }
+    else { if(typeof c.mute==='function') c.mute(true); else if(typeof c.setMuted==='function') c.setMuted(true); }
+    if(typeof c.isMuted!=='function'){ $('micChip').textContent=m?'Mic on':'Muted'; $('muteBtn').textContent=m?'Mute':'Unmute'; }
+    else micUi();
+  }catch(e){ setErr(e.message||'Could not change mute.'); }
+});
+
+/* ---------- sample call (backup) ---------- */
+$('sampleBtn').addEventListener('click',function(){
+  if(timer||busy) return;
+  var pass=$('f-pass').value;
+  setErr('');
+  if(!pass){ setErr('Enter the passcode first.'); $('f-pass').focus(); return; }
+  busy=true; $('sampleBtn').disabled=true; $('callBtn').disabled=true; $('webBtn').disabled=true;
+  setStatus('Scoring sample call…','Reading a recorded screen and scoring it.',3,true);
+  fetch('/api/score-sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passcode:pass})})
+  .then(readJson)
+  .then(function(j){
+    if(!j.result) throw new Error('The sample call came back without a result.');
+    landResult(String(j.result.name||j.result.candidate_name||'Sample candidate'), j.result, true);
+  })
+  .catch(function(err){
+    setStatus('Could not score the sample','',null,false);
+    setErr(netMsg(err,'Could not reach the scoring service. Check the page is being served by the Hirefy server.'));
+    finish();
+  });
+});
+
+/* ---------- resume upload ---------- */
+var PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+var MAMMOTH='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+var loaded={};
+function loadScript(src){
+  if(!loaded[src]) loaded[src]=new Promise(function(ok,bad){
+    var s=document.createElement('script'); s.src=src; s.async=true;
+    s.onload=ok; s.onerror=function(){ delete loaded[src]; bad(new Error('Could not load the file reader. Check your connection.')); };
+    document.head.appendChild(s);
+  });
+  return loaded[src];
+}
+function extractText(file){
+  var n=file.name.toLowerCase();
+  if(/\.txt$/.test(n)) return file.text();
+  if(/\.pdf$/.test(n)) return loadScript(PDFJS+'pdf.min.js').then(function(){
+    var lib=window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js';
+    return file.arrayBuffer().then(function(buf){ return lib.getDocument({data:buf}).promise; }).then(function(doc){
+      var pages=[]; for(var i=1;i<=Math.min(doc.numPages,10);i++) pages.push(doc.getPage(i).then(function(pg){ return pg.getTextContent(); }).then(function(tc){ return tc.items.map(function(it){return it.str;}).join(' '); }));
+      return Promise.all(pages).then(function(t){ return t.join('\n'); });
+    });
+  });
+  if(/\.docx$/.test(n)) return loadScript(MAMMOTH).then(function(){
+    return file.arrayBuffer().then(function(buf){ return window.mammoth.extractRawText({arrayBuffer:buf}); }).then(function(r){ return r.value; });
+  });
+  return Promise.reject(new Error('Upload a PDF, Word (.docx) or text file.'));
+}
+function resumeMsg(html){ $('resumeWrap').hidden=false; $('resumeBox').innerHTML=html; }
+var lastAutoNote='', resumeSeq=0;
+$('f-resume').addEventListener('change',function(){
+  var file=this.files && this.files[0], seq=++resumeSeq;
+  resume=null;
+  if(!file){ $('resumeWrap').hidden=true; return; }
+  var pass=$('f-pass').value;
+  if(!pass){ resumeMsg('<p class="err" style="margin:0">Enter the passcode first, then choose the file again.</p>'); this.value=''; return; }
+  if(file.size>10*1024*1024){ resumeMsg('<p class="err" style="margin:0">That file is over 10 MB. Try a smaller copy.</p>'); return; }
+  resumeMsg('<span class="label">Reading '+esc(file.name)+'…</span>');
+  extractText(file).then(function(text){
+    text=String(text||'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+    if(text.length<40) throw new Error('Could not find readable text in that file. If it is a scanned PDF, try a Word or text copy.');
+    if(seq!==resumeSeq) return null;
+    resumeMsg('<span class="label">Reading the resume…</span>');
+    return fetch('/api/resume',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({passcode:pass,resume_text:text.slice(0,20000),role:$('f-role').value.trim(),company:$('f-co').value.trim()})}).then(readJson);
+  }).then(function(j){
+    if(!j || seq!==resumeSeq) return;
+    resume=j;
+    var p=j.profile||{}, qs=Array.isArray(j.resume_questions)?j.resume_questions:[];
+    if(p.name && !$('f-name').value.trim()) $('f-name').value=String(p.name);
+    var note=$('f-note');
+    if(j.resume_note && (!note.value.trim() || note.value===lastAutoNote)){ note.value=lastAutoNote=String(j.resume_note); }
+    var row=function(k,v){ return v==null||v===''?'':'<dt>'+k+'</dt><dd>'+esc(v)+'</dd>'; };
+    var yrs=p.years_experience;
+    resumeMsg('<span class="label">From the resume</span><dl>'+
+      row('Name',p.name)+row('Current role',p.current_role)+
+      row('Experience',typeof yrs==='number'?yrs+(yrs===1?' year':' years'):yrs)+
+      row('Location',p.location)+row('Education',p.education)+'</dl>'+
+      (Array.isArray(p.skills)&&p.skills.length?'<div class="chips" style="margin-top:8px">'+p.skills.slice(0,12).map(function(s){return '<span class="chip">'+esc(s)+'</span>';}).join('')+'</div>':'')+
+      (typeof j.resume_only_score==='number'?'<div class="rscore">Resume-only score: '+Math.round(j.resume_only_score)+'</div>':'')+
+      (qs.length?'<h3 style="margin-top:12px">The interviewer will ask:</h3><ol>'+qs.slice(0,2).map(function(q){return '<li>'+esc(q)+'</li>';}).join('')+'</ol>':''));
+  }).catch(function(err){
+    if(seq!==resumeSeq) return;
+    resume=null;
+    resumeMsg('<p class="err" style="margin:0">'+esc(netMsg(err,'Could not reach the resume service. Check the page is being served by the Hirefy server.'))+'</p>');
+  });
+});
+
+$('s-jd').value=state.jd;
+loadPreset('balanced');
+loadLive();
+renderSliders(); renderLists();
 render();
 })();
 </script>

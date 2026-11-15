@@ -61,6 +61,8 @@ export default async function handler(req, res) {
           company: clip(body.company, 120),
           resume_note: clip(body.resume_note, 1500) || "not provided",
           must_haves: "2+ years of sales experience; comfortable speaking English",
+          resume_q1: clip(body.resume_q1, 300),
+          resume_q2: clip(body.resume_q2, 300),
         },
       }),
     });
