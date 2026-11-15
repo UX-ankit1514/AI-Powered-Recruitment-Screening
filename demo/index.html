@@ -265,6 +265,21 @@ audio{width:100%}
 pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 var(--sans);background:var(--sunken);border-radius:10px;padding:14px;margin:0;max-height:420px;overflow:auto}
 
 /* jobs */
+.atscard .seg{margin-bottom:4px}
+.ats-body{margin-top:16px}
+.ats-body[hidden]{display:none}
+.ats-sum{font-family:var(--mono);font-size:13px;letter-spacing:-.02em;color:var(--text);margin:10px 0 2px;font-variant-numeric:tabular-nums}
+.ats-sum b{font-weight:600}
+.ats-demo{font-size:13px;color:var(--text-3)}
+.ats-chk{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13.5px;color:var(--text-2);cursor:pointer}
+.ats-chk input{width:auto;margin-top:3px;accent-color:var(--accent)}
+.ats-chk small{display:block;color:var(--text-3);font-size:12.5px;margin-top:2px}
+.ats-note{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--text-3)}
+tbody tr.atsoff td{color:var(--text-3);background:var(--sunken)}
+tbody tr.atsoff .av{opacity:.55}
+tbody tr.atsoff .nm{color:var(--text-2)}
+.chip.ats{background:var(--line);color:var(--text-2)}
+.atsnote{display:block;margin-top:4px;font-size:12.5px;color:var(--red);font-weight:500}
 .jobs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
 .hint{color:var(--text-3);margin:4px 0 16px;font-size:13.5px}
 .f{display:flex;flex-direction:column;gap:6px}
@@ -437,6 +452,7 @@ h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
         <h1>Sales Executive · Bengaluru</h1>
         <div class="chips">
           <label class="rubric">Rubric: <select id="rubricSel" aria-label="Rubric preset"></select></label>
+          <a class="chip chip-link" id="atsChip" href="#jobs">Calling everyone</a>
           <a class="chip chip-link" href="#jobs">Customise rubric →</a>
           <span class="chip">English + Hinglish</span>
           <span class="chip">2 other open roles</span>
@@ -450,7 +466,7 @@ h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
     </div>
 
     <div class="kpis">
-      <div class="card kpi"><div class="label">Applicants</div><div class="big">1,000</div><p>Spreadsheet 620 · Naukri 240 · LinkedIn 140</p></div>
+      <div class="card kpi"><div class="label">Applicants</div><div class="big">1,000</div><p id="kpiApp">Spreadsheet 620 · Naukri 240 · LinkedIn 140</p></div>
       <div class="card kpi"><div class="label">Calls completed</div><div class="big">612</div><div class="bar"><i style="width:61%"></i></div><p>61% of applicants · 298 short exits</p></div>
       <div class="card kpi"><div class="label">Hidden fits found</div><div class="big">113</div><p>Other role 37 · Culture 22 · Internship 54</p></div>
       <div class="card kpi"><div class="label">Spend so far</div><div class="big">₹34,140</div><p>~₹56 per completed call</p></div>
@@ -552,6 +568,23 @@ h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
           <div class="addrow"><button type="button" class="btn2 sm" data-act="addFaq">Add question</button></div>
         </div>
       </div>
+      <div>
+      <div class="card sec atscard">
+        <h2>Who gets a call</h2>
+        <p class="hint">Decide whether Pingo calls every applicant or only the ones a resume screen ranks highest.</p>
+        <div class="seg" id="atsSeg" role="group" aria-label="Who gets a call">
+          <button type="button" data-ats="all" aria-pressed="true">Call everyone</button>
+          <button type="button" data-ats="ats" aria-pressed="false">ATS filter first</button>
+        </div>
+        <div class="ats-body" id="atsBody" hidden>
+          <div class="sl"><div class="sl-top"><label for="atsPct">Call the top N% by resume score</label><span class="pct" id="atsPctOut">60%</span></div>
+          <input type="range" min="10" max="100" step="5" id="atsPct" value="60"></div>
+          <p class="ats-sum" id="atsSum"></p>
+          <p class="ats-demo" id="atsDemo"></p>
+          <label class="ats-chk"><input type="checkbox" id="atsRescue" checked><span>Still call anyone the ATS would drop if they match a must-have keyword<small id="atsRescueOut">Anyone within 10 points of the cutoff still gets a call.</small></span></label>
+        </div>
+        <p class="ats-note">Pingo works best when everyone gets a call; use the ATS filter when call volume or budget is tight.</p>
+      </div>
       <div class="card sec">
         <h2>Rubric</h2>
         <p class="hint">Weights always add up to 100%. The ranking updates as you move them.</p>
@@ -568,6 +601,7 @@ h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
           <ul class="edit" id="mhList"></ul>
           <div class="addrow"><input id="mhIn" placeholder="Add a must-have" aria-label="New must-have"><button type="button" class="btn2 sm" data-act="addMh">Add</button></div>
         </div>
+      </div>
       </div>
     </div>
   </section>
@@ -845,10 +879,52 @@ function score(c, p){
   return {overall:overall, pick:pick, capped:capped, why:c.short_exit?'call ended early':'must-have not met'};
 }
 var ORDER={Amazing:0,Good:1,Maybe:2,No:3};
-function ranked(){
-  return C.map(function(c){return {c:c,s:scoreOf(c)};}).sort(function(a,b){
-    return ORDER[a.s.pick]-ORDER[b.s.pick] || b.s.overall-a.s.overall || a.c.name.localeCompare(b.c.name);
+/* ATS pre-filter: HR picks what share of applicants get a call, ranked by resume score */
+var ATS_KEY='pingo.ats.v1';
+var ats={mode:'all', pct:60, rescue:true};
+try{ var _a=JSON.parse(localStorage.getItem(ATS_KEY)||'null'); if(_a&&typeof _a==='object'){ if(_a.mode==='ats'||_a.mode==='all') ats.mode=_a.mode; if(typeof _a.pct==='number'&&_a.pct>=10&&_a.pct<=100) ats.pct=Math.round(_a.pct/5)*5; if(typeof _a.rescue==='boolean') ats.rescue=_a.rescue; } }catch(e){}
+function saveAts(){ try{ localStorage.setItem(ATS_KEY, JSON.stringify(ats)); }catch(e){} }
+// returns {off:{id:true}, rescued:{id:true}, cutoff, total, called}; live and sample calls are always counted as called
+function atsCalc(){
+  var out={off:{}, rescued:{}, cutoff:null, total:0, called:0, nRescued:0};
+  var pool=C.filter(function(c){return !c.live && typeof c.resume_only_score==='number';});
+  out.total=C.filter(function(c){return !c.live;}).length;
+  if(ats.mode!=='ats' || !pool.length){ out.called=out.total; return out; }
+  pool.sort(function(a,b){return b.resume_only_score-a.resume_only_score;});
+  var keep=Math.max(1, Math.ceil(pool.length*ats.pct/100));
+  out.cutoff=pool[keep-1].resume_only_score;
+  pool.forEach(function(c,i){
+    if(i<keep) return;
+    if(ats.rescue && c.resume_only_score>=out.cutoff-10){ out.rescued[c.id]=true; out.nRescued++; return; }
+    out.off[c.id]=true;
   });
+  out.called=out.total-Object.keys(out.off).length;
+  return out;
+}
+function ranked(){
+  var a=atsCalc();
+  return C.map(function(c){return {c:c,s:scoreOf(c),f:!!a.off[c.id]};}).sort(function(a,b){
+    return (a.f-b.f) || ORDER[a.s.pick]-ORDER[b.s.pick] || b.s.overall-a.s.overall || a.c.name.localeCompare(b.c.name);
+  });
+}
+function renderAts(){
+  var on=ats.mode==='ats', a=atsCalc(), called=Math.round(1000*ats.pct/100);
+  [].forEach.call(document.querySelectorAll('[data-ats]'),function(b){ b.setAttribute('aria-pressed', String(b.dataset.ats===ats.mode)); });
+  $('atsBody').hidden=!on;
+  $('atsPct').value=ats.pct; $('atsPctOut').textContent=ats.pct+'%'; $('atsRescue').checked=ats.rescue;
+  $('atsSum').innerHTML='Of 1,000 applicants: <b>'+called.toLocaleString('en-IN')+'</b> get a call · <b>'+(1000-called).toLocaleString('en-IN')+'</b> filtered by ATS';
+  $('atsDemo').textContent=a.called+' of '+a.total+' in this demo get a call'+(a.cutoff!=null&&a.called<a.total?' · resume cutoff '+Math.round(a.cutoff):'');
+  $('atsRescueOut').textContent=ats.rescue?('Anyone within 10 points of the cutoff still gets a call · '+a.nRescued+' rescued here'):'Off: everyone below the cutoff is skipped.';
+  $('atsChip').textContent=on?'ATS: top '+ats.pct+'%':'Calling everyone';
+  $('kpiApp').textContent=on?'ATS filtered '+(1000-called)+' · '+called+' get a call':'Spreadsheet 620 · Naukri 240 · LinkedIn 140';
+}
+function atsNote(c,s){
+  return hookOf(c,s)?'<span class="atsnote">ATS would have dropped '+esc(String(c.name).split(/\s+/)[0])+' — call score '+s.overall+'</span>':'';
+}
+function atsRow(c,s,mode){
+  var r=typeof c.resume_only_score==='number'?Math.round(c.resume_only_score):'n/a';
+  return '<tr tabindex="0" class="atsoff" data-id="'+c.id+'"><td>'+whoCell(c,s)+'</td><td><span class="chip ats">ATS filtered</span></td><td class="col-score"><span class="num">—</span></td>'+
+    '<td class="call col-call">Not called · resume '+r+'</td><td class="why col-why">Filtered by ATS · not called'+atsNote(c,s)+'</td><td>'+openBtn(c)+'</td></tr>';
 }
 function flagChips(c){
   var f=c.flags, o=[];
@@ -902,18 +978,21 @@ function render(){
   var nLive=C.filter(function(c){return c.live;}).length;
   $('clearLive').hidden=!nLive; $('clearLive').textContent='Clear live ('+nLive+')';
   var n={All:list.length,Amazing:0,Good:0,Maybe:0,No:0,'Hidden fits':0};
-  list.forEach(function(x){ n[x.s.pick]++; if(inPool(x.c)) n['Hidden fits']++; });
+  list.forEach(function(x){ if(x.f) return; n[x.s.pick]++; if(inPool(x.c)) n['Hidden fits']++; });
+  renderAts();
   $('filt').innerHTML=['All','Amazing','Good','Maybe','No','Hidden fits'].map(function(k){
     return '<button type="button" class="fbtn" data-filter="'+k+'" aria-pressed="'+(ui.filter===k)+'">'+k+'<span class="num">'+n[k]+'</span></button>';}).join('');
-  var shown=list.filter(function(x){ return match(x.c) && (ui.filter==='All' || (ui.filter==='Hidden fits'?inPool(x.c):x.s.pick===ui.filter)); });
+  var shown=list.filter(function(x){ return match(x.c) && (ui.filter==='All' || (!x.f && (ui.filter==='Hidden fits'?inPool(x.c):x.s.pick===ui.filter))); });
   $('rows').innerHTML = shown.length ? shown.map(function(x){
     var c=x.c, s=x.s;
+    if(x.f) return atsRow(c,s);
     return '<tr tabindex="0" data-id="'+c.id+'"><td>'+whoCell(c,s)+'</td><td>'+pickCell(s)+'</td><td class="col-score">'+scoreCell(s)+'</td>'+
       '<td class="call col-call">'+callCell(c)+'</td><td class="why col-why">'+whyCell(c,s)+'</td><td>'+openBtn(c)+'</td></tr>';
   }).join('') : '<tr><td colspan="6" class="empty">Nobody matches. Clear the search or pick another filter.</td></tr>';
   $('footCount').textContent='Showing '+shown.length+' of '+list.length+' screened here';
   $('allRows').innerHTML = list.map(function(x){
     var c=x.c, s=x.s;
+    if(x.f) return atsRow(c,s);
     return '<tr tabindex="0" data-id="'+c.id+'"><td>'+whoCell(c,s)+'</td><td>'+pickCell(s)+'</td><td class="col-score">'+scoreCell(s)+'</td>'+
       '<td class="col-call">'+gap(c,s)+'</td><td class="why col-why">'+esc(c.summary)+'</td><td>'+openBtn(c)+'</td></tr>';
   }).join('');
@@ -1027,7 +1106,7 @@ function route(){
 function showTab(t){ location.hash = t; }
 function openPanel(id){ location.hash='candidate/'+encodeURIComponent(id); }
 function exportShortlist(){
-  var rows=[['Name','Pick','Score','Resume score','Summary']].concat(ranked().filter(function(x){return x.s.pick==='Amazing'||x.s.pick==='Good';}).map(function(x){return [x.c.name,x.s.pick,x.s.overall,x.c.resume_only_score==null?'':Math.round(x.c.resume_only_score),x.c.summary||''];}));
+  var rows=[['Name','Pick','Score','Resume score','Summary']].concat(ranked().filter(function(x){return !x.f && (x.s.pick==='Amazing'||x.s.pick==='Good');}).map(function(x){return [x.c.name,x.s.pick,x.s.overall,x.c.resume_only_score==null?'':Math.round(x.c.resume_only_score),x.c.summary||''];}));
   var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='pingo-shortlist.csv'; document.body.appendChild(a); a.click(); a.remove();
 }
@@ -1038,6 +1117,7 @@ document.addEventListener('click',function(e){
   var pb=t.closest('[data-p]'); if(pb){ loadPreset(pb.dataset.p); renderSliders(); render(); return; }
   var go=t.closest('[data-goto]'); if(go){ showTab(go.dataset.goto); return; }
   var ac=t.closest('[data-act]'); if(ac){ setupAct(ac.dataset.act); return; }
+  var ab=t.closest('[data-ats]'); if(ab){ ats.mode=ab.dataset.ats; saveAts(); render(); return; }
   var fb=t.closest('[data-filter]'); if(fb){ ui.filter=fb.dataset.filter; render(); return; }
   var dc=t.closest('[data-dec]'); if(dc){ if(dc.dataset.dec) state.dec[state.sel]=dc.dataset.dec; else delete state.dec[state.sel]; renderProfile(); return; }
   if(t.closest('[data-del-val]')){ state.values.splice(+t.closest('[data-del-val]').dataset.delVal,1); renderLists(); return; }
@@ -1054,7 +1134,8 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('change',function(e){
   var t=e.target;
-  if(t.id==='rubricSel' && t.value!=='custom'){ loadPreset(t.value); renderSliders(); render(); }
+  if(t.id==='atsRescue'){ ats.rescue=t.checked; saveAts(); render(); }
+  else if(t.id==='rubricSel' && t.value!=='custom'){ loadPreset(t.value); renderSliders(); render(); }
   else if(t.dataset && t.dataset.ovr){ if(t.value) state.ovr[t.dataset.ovr]=t.value; else delete state.ovr[t.dataset.ovr]; render(); }
 });
 document.addEventListener('keydown',function(e){
@@ -1066,7 +1147,8 @@ document.addEventListener('keydown',function(e){
 });
 document.addEventListener('input',function(e){
   var t=e.target, d=t.dataset||{};
-  if(d.k){ state.w[d.k]=+t.value; state.preset='custom'; updatePcts(); render(); }
+  if(t.id==='atsPct'){ ats.pct=+t.value; saveAts(); render(); }
+  else if(d.k){ state.w[d.k]=+t.value; state.preset='custom'; updatePcts(); render(); }
   else if(d.val!=null){ state.values[+d.val]=t.value; }
   else if(d.faqQ!=null){ state.faq[+d.faqQ].q=t.value; }
   else if(d.faqA!=null){ state.faq[+d.faqA].a=t.value; }
