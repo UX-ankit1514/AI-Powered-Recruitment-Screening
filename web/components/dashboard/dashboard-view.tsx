@@ -273,19 +273,19 @@ export function DashboardView({ data, canEdit }: { data: DashboardData; canEdit:
           <div className="card hf">
             <h2>Hidden fits</h2>
             <p>People who are wrong for this job but worth keeping.</p>
-            <Link className="hfrow t-green" href="/talent-pool">
+            <Link className="hfrow t-green" href="/hidden">
               Fits another role<span className="num">{kpi.hiddenFits.otherRole}</span>
             </Link>
-            <Link className="hfrow t-blue" href="/talent-pool">
+            <Link className="hfrow t-blue" href="/hidden">
               Culture standout<span className="num">{kpi.hiddenFits.culture}</span>
             </Link>
-            <Link className="hfrow t-yellow" href="/talent-pool">
+            <Link className="hfrow t-yellow" href="/hidden">
               Wants an internship<span className="num">{kpi.hiddenFits.internship}</span>
             </Link>
-            <Link className="hfrow t-red" href="/talent-pool">
+            <Link className="hfrow t-red" href="/hidden">
               Resume doesn’t match<span className="num">{kpi.hiddenFits.mismatch}</span>
             </Link>
-            <Link className="hfrow t-grey" href="/talent-pool">
+            <Link className="hfrow t-grey" href="/hidden">
               HR to review<span className="num">{kpi.hiddenFits.hrReview}</span>
             </Link>
           </div>

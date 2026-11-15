@@ -10,7 +10,7 @@ const ITEMS = [
   { href: "/jobs", label: "Job & rubric", Icon: IconJob, match: ["/jobs"] },
   { href: "/candidates", label: "Candidates", Icon: IconPeople, match: ["/candidates"] },
   { href: "/calls", label: "Calls", Icon: IconPhone, match: ["/calls"] },
-  { href: "/talent-pool", label: "Hidden fits", Icon: IconStar, match: ["/talent-pool", "/hidden-fits"] },
+  { href: "/hidden", label: "Hidden fits", Icon: IconStar, match: ["/hidden", "/talent-pool", "/hidden-fits"] },
   { href: "/settings", label: "Settings", Icon: IconSettings, match: ["/settings"] },
 ] as const;
 
