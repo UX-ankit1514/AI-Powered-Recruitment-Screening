@@ -58,11 +58,12 @@
         "Architecture v1 written: one Next.js app on Vercel, Supabase (data, login, files, live updates), Claude for reading resumes and scoring, Bolna for the call.",
         "Dispatcher runs every minute, keeps 2 calls in flight, retries up to 3 times, books reschedules.",
         "Scores stored per quality (1–5 with quotes); overall and pick computed live, so rubric switches are instant.",
-        "9 build modules defined for subagents, each with skills needed and a 'done when' test."
+        "9 build modules defined for subagents, each with skills needed and a 'done when' test.",
+        "Build spec written: exact database, every request in and out, verified Bolna details, interviewer script spec, AI outputs, screens, and one brief per build piece."
       ],
       "open": [
         "Day-1 Bolna checks: start-call fields, mid-call tool format, Hinglish voice, agent hanging up itself, raising the 2-call limit.",
-        "System diagram to be refined with Fable."
+        "Remaining Bolna checks on the first test call: exact transcript/recording field names, Hinglish quality."
       ]
     },
     {
@@ -139,6 +140,11 @@
       "label": "Architecture v1",
       "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/architecture.md",
       "note": "System diagram, components, data model, security, and 9 build modules for subagents."
+    },
+    {
+      "label": "Build spec",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/build-spec.md",
+      "note": "Exact contracts + 9 module briefs for the Fable subagents."
     },
     {
       "label": "PRD gap review",
