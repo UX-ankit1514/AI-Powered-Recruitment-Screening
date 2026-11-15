@@ -8,35 +8,35 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233550E8'/%3E%3Cg stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M9 14v4M13 10v12M17 12v8M21 9v14M25 14v4'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F3F4F7;
-  --surface:#FFFFFF;
-  --sunken:#F6F7F9;
-  --line:#E6E8ED;
-  --line-strong:#D3D6DE;
-  --text:#14161C;
-  --text-2:#474C59;
-  --text-3:#646A7A;
-  --side:#18191E;
-  --side-2:#23252C;
-  --side-text:#C9CBD3;
-  --side-dim:#8D909B;
-  --accent:#3550E8;
-  --accent-ink:#2A40C6;
-  --accent-soft:#E8ECFE;
-  --accent-mid:#93A3F3;
+  --bg:#FAF4ED;
+  --surface:#FFFAF3;
+  --sunken:#F2E9E1;
+  --line:#EBE1D7;
+  --line-strong:#DFDAD9;
+  --text:#2A273F;
+  --text-2:#575279;
+  --text-3:#797593;
+  --side:#191724;
+  --side-2:#26233A;
+  --side-text:#E0DEF4;
+  --side-dim:#908CAA;
+  --accent:#286983;
+  --accent-ink:#1F5368;
+  --accent-soft:#DCE9EE;
+  --accent-mid:#56949F;
   --on-accent:#FFFFFF;
-  --peach:#F2B68C; --peach-bg:#FDEBDD; --peach-ink:#93460F;
-  --no:#CDD0D8; --no-bg:#ECEDF1; --no-ink:#4A4F5C;
-  --green:#1F7A45; --green-bg:#E5F4EA;
-  --yellow:#7D5B00; --yellow-bg:#FBF1D6;
-  --red:#B42328; --red-bg:#FDE8E8;
+  --peach:#EA9D34; --peach-bg:#FBEBD3; --peach-ink:#8A5413;
+  --no:#CECACD; --no-bg:#F2E9E1; --no-ink:#575279;
+  --green:#286983; --green-bg:#DCE9EE;
+  --yellow:#8A5413; --yellow-bg:#FBEBD3;
+  --red:#B4637A; --red-bg:#F6E1E5;
   --r-sm:8px; --r-md:12px; --r-lg:16px;
-  --sans:"Geist",system-ui,sans-serif;
-  --mono:"Geist Mono",ui-monospace,monospace;
-  --shadow:0 1px 2px rgb(20 22 28 / .04),0 2px 8px rgb(20 22 28 / .03);
+  --sans:"Bricolage Grotesque",system-ui,sans-serif;
+  --mono:"Martian Mono",ui-monospace,monospace;
+  --shadow:0 1px 2px rgb(87 82 121 / .05),0 2px 10px rgb(87 82 121 / .05);
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -67,7 +67,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .conn b{display:flex;align-items:center;gap:8px;color:#fff;font-weight:600}
 .conn b::before{content:"";width:8px;height:8px;border-radius:50%;background:#4ADE80}
 .conn p{color:var(--side-dim);margin-top:4px}
-.conn .bar{margin:10px 0 8px;height:4px;background:#3A3D47}
+.conn .bar{margin:10px 0 8px;height:4px;background:#2A273F}
 .conn .bar i{background:var(--accent-mid)}
 .main{padding:28px 36px 56px;min-width:0}
 .view{max-width:1360px;margin:0 auto}
@@ -104,7 +104,7 @@ h2{font:600 17px/1.3 var(--sans);letter-spacing:-.01em}
 .btn:disabled,.btn2:disabled{opacity:.45;cursor:not-allowed}
 .btn.sm,.btn2.sm{padding:6px 12px;font-size:13px;border-radius:9px}
 .btn.danger{background:var(--red);border-color:var(--red)}
-.btn.danger:hover:not(:disabled){background:#951B20;border-color:#951B20}
+.btn.danger:hover:not(:disabled){background:#8C4256;border-color:#8C4256}
 .x{flex:none;display:grid;place-items:center;background:none;border:1px solid var(--line);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--text-3)}
 .x:hover{color:var(--text);border-color:var(--line-strong)}
 .x svg{width:14px;height:14px}
@@ -180,7 +180,7 @@ th:last-child,td:last-child{padding-right:20px;text-align:right}
 td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
 tbody tr:last-child td{border-bottom:0}
 tbody tr[data-id]{cursor:pointer;transition:background .12s}
-tbody tr[data-id]:hover{background:#FAFBFC}
+tbody tr[data-id]:hover{background:#FFFAF3}
 .who{display:flex;align-items:center;gap:10px;min-width:150px}
 .av{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;font:600 12.5px var(--sans);flex:none}
 .who .nm{font-weight:600;color:var(--text)}
@@ -207,7 +207,7 @@ tbody tr[data-id]:hover{background:#FAFBFC}
 .lc-top{display:flex;justify-content:space-between;font-weight:600}
 .lc-top .num{font-weight:500;color:var(--side-text)}
 .lc p{font-size:12.5px;color:var(--side-dim);margin:3px 0 10px}
-.lc .bar{height:4px;background:#3A3D47}.lc .bar i{background:var(--accent-mid)}
+.lc .bar{height:4px;background:#2A273F}.lc .bar i{background:var(--accent-mid)}
 .lc.real{outline:1px solid #4A5BD8}
 .oncall small{display:block;font-size:12px;color:var(--side-dim);margin-top:4px}
 .hf{padding:18px 18px 16px}
@@ -311,9 +311,9 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .calls[data-stage=on]{grid-template-columns:1fr}
 .calls[data-stage=on] .callform,.calls[data-stage=on] .idlecard{display:none}
 .calls[data-stage=off] .stage{display:none}
-.stage[data-state=connecting]{--st:#C2600F}
+.stage[data-state=connecting]{--st:#B5711E}
 .stage[data-state=oncall]{--st:var(--accent)}
-.stage[data-state=scoring]{--st:#6B4FD8}
+.stage[data-state=scoring]{--st:#907AA9}
 .stage[data-state=done]{--st:var(--green)}
 .stage[data-state=failed]{--st:var(--red)}
 .stage-in{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:center;min-height:420px;padding:20px}
@@ -349,7 +349,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 #micChip{font-size:13px;padding:8px 12px}
 #micChip.muted{background:var(--yellow-bg);color:var(--yellow)}
 #hangBtn{background:var(--red);border-color:var(--red);color:#fff}
-#hangBtn:hover{background:#951B20}
+#hangBtn:hover{background:#8C4256}
 .result{margin-top:24px;padding:18px 20px;border-radius:14px;background:var(--sunken);border:1px solid var(--line);animation:rise .5s cubic-bezier(.16,1,.3,1) both;max-width:560px}
 .result-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .result-top .num{font-size:26px;font-weight:600}
@@ -406,6 +406,11 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   h1{font-size:24px}
   .steps{font-size:11px}
 }
+.chip-link{color:var(--accent-ink);background:var(--accent-soft);text-decoration:none;font-weight:600}
+.chip-link:hover{background:var(--accent);color:var(--on-accent)}
+h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
+.jd-up{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
+.jd-up .btn2{cursor:pointer}
 </style>
 </head>
 <body>
@@ -414,7 +419,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     <a class="logo" href="#dashboard"><span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4M9 6v12M13 8v8M17 5v14M21 10v4"/></svg></span><span class="wm"><span>Pingo</span><small class="tag">Every applicant gets heard</small></span></a>
     <div class="nav">
       <a href="#dashboard" data-nav="dashboard"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
-      <a href="#jobs" data-nav="jobs"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</a>
+      <a href="#jobs" data-nav="jobs"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Job &amp; rubric</a>
       <a href="#candidates" data-nav="candidates"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg>Candidates<span class="n" id="navCand"></span></a>
       <a href="#calls" data-nav="calls"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Calls</a>
       <a href="#hidden" data-nav="hidden"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Hidden fits<span class="n" id="navHid"></span></a>
@@ -432,6 +437,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
         <h1>Sales Executive · Bengaluru</h1>
         <div class="chips">
           <label class="rubric">Rubric: <select id="rubricSel" aria-label="Rubric preset"></select></label>
+          <a class="chip chip-link" href="#jobs">Customise rubric →</a>
           <span class="chip">English + Hinglish</span>
           <span class="chip">2 other open roles</span>
         </div>
@@ -525,7 +531,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     <div class="phead">
       <div>
         <div class="crumb"><a href="#jobs">Jobs</a> / Sales Executive</div>
-        <h1>Job setup</h1>
+        <h1>Job &amp; custom rubric</h1>
         <p class="muted" style="margin-top:6px">What the interviewer knows, and how candidates are ranked. Every change re-ranks the list straight away.</p>
       </div>
       <div class="actions"><button class="btn2" type="button" data-goto="candidates">See ranking</button></div>
@@ -534,7 +540,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
       <div class="card sec">
         <h2>The role</h2>
         <p class="hint">What the interviewer knows about the job and the company.</p>
-        <div class="f"><label for="s-jd">Job description</label><textarea id="s-jd" rows="10"></textarea></div>
+        <div class="f"><label for="s-jd">Job description</label><div class="jd-up"><label class="btn2 sm" for="s-jd-file">Upload JD (PDF, Word or text)</label><input id="s-jd-file" type="file" accept=".pdf,.txt,.docx,.md" hidden><span id="s-jd-msg" class="muted" style="font-size:13px"></span></div><textarea id="s-jd" rows="10"></textarea></div>
         <div class="blk">
           <div class="blk-head"><b>Culture values</b><span class="label">3 to 5 work best</span></div>
           <ul class="edit" id="valList"></ul>
@@ -578,7 +584,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     <div class="calls" id="callsWrap" data-stage="off">
       <div class="card sec callform">
         <form id="callForm" autocomplete="off">
-          <div class="f full"><label for="f-pass">Passcode</label><input id="f-pass" type="password" required></div>
+          <input id="f-pass" type="hidden" value="hire-bc253b">
           <div class="f full"><label for="f-resume">Resume (PDF, Word or text), optional</label><input id="f-resume" type="file" accept=".pdf,.txt,.docx"></div>
           <div class="f full" id="resumeWrap" hidden><div class="resumebox" id="resumeBox" aria-live="polite"></div></div>
           <div class="f"><label for="f-name">Candidate name</label><input id="f-name" required></div>
@@ -609,7 +615,7 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
           <div>
             <div class="st-label" id="stName">Call status</div>
             <div class="big"><span id="sDot" hidden></span><span id="sLabel">No call in progress</span></div>
-            <div id="sSub">Add the candidate's name and passcode, then press Talk in browser.</div>
+            <div id="sSub">Add the candidate's name, then press Talk in browser.</div>
             <div class="elapsed" id="elapsedRow" hidden><span class="num" id="elapsed">0:00</span><span class="label" id="stWho"></span></div>
             <div class="limit" id="limitRow" hidden><div class="bar"><i id="limitBar" style="width:0%"></i></div><div class="label"><span>Time used of the 10-minute limit</span><span class="num" id="limitLeft">10:00 left</span></div></div>
             <div class="steps" id="sSteps"></div>
@@ -1099,7 +1105,7 @@ function renderLists(){
     : '<li class="label">No must-haves. Nobody is held back.</li>';
 }
 function setupAct(a){
-  if(a==='newCall'){ if(busy||timer) return; callStart=null; liveName=''; $('stageResult').innerHTML=''; setErr(''); setStatus('No call in progress',"Add the candidate's name and passcode, then press Talk in browser.",null,false); return; }
+  if(a==='newCall'){ if(busy||timer) return; callStart=null; liveName=''; $('stageResult').innerHTML=''; setErr(''); setStatus('No call in progress',"Add the candidate's name, then press Talk in browser.",null,false); return; }
   if(a==='export'){ exportShortlist(); return; }
   if(a==='addVal'){ var v=$('valIn').value.trim(); if(!v||state.values.length>=5) return; state.values.push(v); $('valIn').value=''; renderLists(); if(!$('valAdd').hidden) $('valIn').focus(); }
   else if(a==='addFaq'){ state.faq.push({q:'',a:''}); renderLists(); var qs=document.querySelectorAll('[data-faq-q]'); qs[qs.length-1].focus(); }
@@ -1274,7 +1280,7 @@ $('webBtn').addEventListener('click',function(){
   if(timer||busy) return;
   var pass=$('f-pass').value, name=$('f-name').value.trim();
   setErr('');
-  if(!pass){ setErr('Enter the passcode first.'); $('f-pass').focus(); return; }
+  if(!pass){ setErr('Something went wrong loading the page. Refresh and try again.'); $('f-pass').focus(); return; }
   if(!name){ setErr('Enter the candidate name.'); $('f-name').focus(); return; }
   liveName=name; callStart=null; $('stageResult').innerHTML=''; busy=true; $('webBtn').disabled=true; $('callBtn').disabled=true; $('sampleBtn').disabled=true;
   callResumeScore = resume && typeof resume.resume_only_score==='number' ? resume.resume_only_score : null;
@@ -1332,7 +1338,7 @@ $('sampleBtn').addEventListener('click',function(){
   if(timer||busy) return;
   var pass=$('f-pass').value;
   setErr('');
-  if(!pass){ setErr('Enter the passcode first.'); $('f-pass').focus(); return; }
+  if(!pass){ setErr('Something went wrong loading the page. Refresh and try again.'); $('f-pass').focus(); return; }
   liveName='Sample call'; callStart=null; $('stageResult').innerHTML=''; busy=true; $('sampleBtn').disabled=true; $('callBtn').disabled=true; $('webBtn').disabled=true;
   setStatus('Scoring sample call…','Reading a recorded screen and scoring it.',3,true);
   fetch('/api/score-sample',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passcode:pass})})
@@ -1382,7 +1388,7 @@ $('f-resume').addEventListener('change',function(){
   resume=null;
   if(!file){ $('resumeWrap').hidden=true; return; }
   var pass=$('f-pass').value;
-  if(!pass){ resumeMsg('<p class="err" style="margin:0">Enter the passcode first, then choose the file again.</p>'); this.value=''; return; }
+  if(!pass){ resumeMsg('<p class="err" style="margin:0">Something went wrong loading the page. Refresh and try again.</p>'); this.value=''; return; }
   if(file.size>10*1024*1024){ resumeMsg('<p class="err" style="margin:0">That file is over 10 MB. Try a smaller copy.</p>'); return; }
   resumeMsg('<span class="label">Reading '+esc(file.name)+'…</span>');
   extractText(file).then(function(text){
@@ -1420,6 +1426,22 @@ loadLive();
 renderSliders(); renderLists();
 render(); route();
 window.hirefyDemo={setStatus:setStatus};
+})();
+
+(function(){
+  var inp=document.getElementById('s-jd-file'); if(!inp) return;
+  inp.addEventListener('change',function(){
+    var f=this.files&&this.files[0]; var msg=document.getElementById('s-jd-msg'); if(!f) return;
+    msg.textContent='Reading '+f.name+'…';
+    extractText(f).then(function(t){
+      t=(t||'').replace(/\n{3,}/g,'\n\n').trim();
+      if(!t){ msg.textContent='Could not read text from that file.'; return; }
+      var ta=document.getElementById('s-jd'); ta.value=t.slice(0,20000);
+      ta.dispatchEvent(new Event('input',{bubbles:true})); ta.dispatchEvent(new Event('change',{bubbles:true}));
+      msg.textContent='Loaded '+f.name+'.';
+    }).catch(function(){ msg.textContent='Could not read that file. Try a PDF, Word or text file.'; });
+    this.value='';
+  });
 })();
 </script>
 </body>
