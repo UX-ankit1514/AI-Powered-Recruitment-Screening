@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hirefy — Sales Executive screening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:oklch(0.985 0.003 90);
+  --surface:oklch(1 0 0);
+  --sunken:oklch(0.965 0.004 90);
+  --line:oklch(0.9 0.005 90);
+  --line-strong:oklch(0.82 0.006 90);
+  --text:oklch(0.22 0.01 90);
+  --text-2:oklch(0.45 0.01 90);
+  --text-3:oklch(0.6 0.008 90);
+  --accent:oklch(0.5 0.12 158);
+  --accent-ink:oklch(0.38 0.1 158);
+  --accent-soft:oklch(0.95 0.035 158);
+  --on-accent:oklch(0.99 0 0);
+  --r-sm:3px; --r-md:6px;
+  --serif:"Newsreader",Georgia,serif;
+  --sans:"IBM Plex Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:oklch(0.17 0.005 90);
+    --surface:oklch(0.205 0.005 90);
+    --sunken:oklch(0.235 0.006 90);
+    --line:oklch(0.29 0.006 90);
+    --line-strong:oklch(0.38 0.007 90);
+    --text:oklch(0.93 0.005 90);
+    --text-2:oklch(0.72 0.007 90);
+    --text-3:oklch(0.56 0.007 90);
+    --accent:oklch(0.74 0.13 158);
+    --accent-ink:oklch(0.8 0.12 158);
+    --accent-soft:oklch(0.29 0.045 158);
+    --on-accent:oklch(0.17 0.01 158);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+button,input,textarea{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px 80px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+header{padding:28px 0 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:20px 48px;align-items:flex-end;justify-content:space-between}
+.brand{font:500 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:6px}
+h1{font:400 30px/1.15 var(--serif);letter-spacing:-.01em}
+.sub{color:var(--text-2);margin-top:4px}
+.counts{display:flex;gap:28px}
+.count b{display:block;font:400 26px/1 var(--serif)}
+.count span{font-size:12px;color:var(--text-3)}
+.count.hl b{color:var(--accent-ink)}
+
+/* tabs + toolbar */
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-top:8px}
+.tab{background:none;border:0;padding:12px 0 10px;border-bottom:2px solid transparent;color:var(--text-2);cursor:pointer;font-weight:500}
+.tab[aria-selected=true]{color:var(--text);border-color:var(--text)}
+.tab .n{color:var(--text-3);font-weight:400;margin-left:4px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;padding:16px 0 12px}
+.label{font-size:12px;color:var(--text-3)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line-strong);border-radius:var(--r-md);background:var(--surface);padding:2px;gap:2px}
+.seg button{border:0;background:none;padding:5px 11px;border-radius:var(--r-sm);cursor:pointer;color:var(--text-2);font-size:13px}
+.seg button[aria-pressed=true]{background:var(--text);color:var(--bg)}
+.weights{font-size:12px;color:var(--text-2)}
+.weights b{font-weight:500;color:var(--text)}
+
+/* table */
+.tablewrap{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font:500 11px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.sel{background:var(--sunken)}
+tr.live td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+.rank{color:var(--text-3);width:36px}
+.name{font-weight:500;white-space:nowrap}
+.overall{font:400 20px/1.1 var(--serif)}
+.gap{white-space:nowrap;color:var(--text-2);font-size:13px}
+.gap b{color:var(--text);font-weight:500}
+.delta{margin-left:6px;font-size:12px;color:var(--text-3)}
+.delta.up{color:var(--accent-ink)}
+.summary{color:var(--text-2);min-width:220px;max-width:380px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-block;font-size:12px;line-height:1;padding:4px 7px;border-radius:var(--r-sm);border:1px solid var(--line-strong);color:var(--text-2);white-space:nowrap}
+.chip.warn{border-style:dashed;color:var(--text)}
+.pick{font-weight:500;min-width:62px;text-align:center}
+.pick.Amazing{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pick.Good{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+.pick.Maybe{color:var(--text)}
+.pick.No{color:var(--text-3);border-color:var(--line)}
+.badge{font:600 10px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);border:1px solid var(--accent);border-radius:var(--r-sm);padding:2px 5px;margin-left:8px;vertical-align:1px}
+.capnote{display:block;font-size:11px;color:var(--text-3);margin-top:3px}
+.empty{padding:28px 12px;color:var(--text-3)}
+
+/* side panel */
+.scrim{position:fixed;inset:0;background:oklch(0.2 0.01 90 / .28);opacity:0;pointer-events:none;transition:opacity .15s}
+.scrim.open{opacity:1;pointer-events:auto}
+aside{position:fixed;top:0;right:0;height:100%;width:min(520px,100%);background:var(--surface);border-left:1px solid var(--line-strong);transform:translateX(100%);transition:transform .18s ease-out;overflow-y:auto;padding:22px 24px 48px;z-index:2}
+aside.open{transform:none}
+@media (prefers-reduced-motion:reduce){aside,.scrim{transition:none}}
+.close{float:right;background:none;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:3px 9px;cursor:pointer;color:var(--text-2)}
+aside h2{font:400 26px/1.2 var(--serif);margin-bottom:8px}
+.phead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;color:var(--text-2)}
+.phead .overall{color:var(--text)}
+h3{font:500 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:24px 0 8px;padding-top:14px;border-top:1px solid var(--line)}
+.lede{font:400 17px/1.45 var(--serif);margin-top:14px}
+.q{padding:10px 0;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.qtop{display:flex;align-items:center;gap:10px}
+.qname{font-weight:500;flex:1}
+.qw{font-size:12px;color:var(--text-3)}
+.pips{display:inline-flex;gap:3px}
+.pips i{width:9px;height:9px;border-radius:2px;border:1px solid var(--line-strong)}
+.pips i.on{background:var(--accent);border-color:var(--accent)}
+.qscore{width:30px;text-align:right;font-weight:500}
+.qreason{color:var(--text-2);margin-top:4px}
+blockquote{margin:6px 0 0;padding-left:10px;border-left:2px solid var(--line-strong);font:400 15px/1.4 var(--serif);font-style:italic}
+.unscored .qname,.unscored .qscore{color:var(--text-3)}
+ul.plain{list-style:none;margin:0;padding:0}
+ul.plain li{padding:5px 0;display:flex;gap:10px}
+.mh{font-size:12px;font-weight:500;width:58px;flex:none;color:var(--accent-ink)}
+.mh.no{color:var(--text)}
+audio{width:100%;margin-top:4px}
+pre{white-space:pre-wrap;word-break:break-word;font:13px/1.5 var(--sans);background:var(--sunken);border-radius:var(--r-md);padding:12px;margin:0;max-height:320px;overflow:auto}
+
+/* live call */
+.live-grid{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:40px;padding-top:20px}
+.live-grid h2{font:400 22px var(--serif);margin-bottom:4px}
+.hint{color:var(--text-2);margin-bottom:16px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f.full{grid-column:1/-1}
+.f label{font-size:12px;color:var(--text-2)}
+input,textarea{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:7px 9px;width:100%}
+textarea{resize:vertical;min-height:70px}
+.btn{grid-column:1/-1;justify-self:start;background:var(--accent);color:var(--on-accent);border:0;border-radius:var(--r-sm);padding:9px 18px;font-weight:500;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.status{border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:18px 20px}
+.status .big{font:400 28px/1.2 var(--serif);margin:6px 0 4px;display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--text-3);flex:none}
+.dot.on{background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.dot.on{animation:none}}
+.steps{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;font-size:12px;color:var(--text-3)}
+.steps span.done{color:var(--text)}
+.steps span.now{color:var(--accent-ink);font-weight:500}
+.err{color:var(--text);border-left:2px solid var(--text);padding-left:10px;margin-top:10px}
+
+[hidden]{display:none!important}
+@media (max-width:860px){
+  .wrap{padding:0 16px 60px}
+  h1{font-size:24px}
+  .counts{gap:20px}
+  .col-sum{display:none}
+  .live-grid{grid-template-columns:1fr;gap:24px}
+  aside{padding:18px 16px 40px}
+}
+@media (max-width:560px){
+  form{grid-template-columns:1fr}
+  .col-flags{display:none}
+  td,th{padding:9px 8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand">Hirefy</div>
+      <h1>Sales Executive — B2B SaaS, Bengaluru</h1>
+      <p class="sub">Every applicant gets a phone screen. Ranked by what they said, not what they wrote.</p>
+    </div>
+    <div class="counts" id="counts"></div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="rank" aria-selected="true">Ranking</button>
+    <button class="tab" role="tab" data-tab="pool" aria-selected="false">Talent pool<span class="n" id="poolN"></span></button>
+    <button class="tab" role="tab" data-tab="live" aria-selected="false">Live call</button>
+  </div>
+
+  <section id="view-rank">
+    <div class="toolbar">
+      <span class="label">Hiring for</span>
+      <div class="seg" id="seg" role="group" aria-label="Rubric preset"></div>
+      <span class="weights" id="weights"></span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Candidate</th><th>Pick</th><th>Overall</th><th>Resume vs call</th><th class="col-flags">Flags</th><th class="col-sum">Summary</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-pool" hidden>
+    <div class="toolbar"><span class="weights">People worth keeping, even if not for this role: a better fit elsewhere, a culture standout, or open to an internship.</span></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Candidate</th><th>Why keep</th><th>This role</th><th class="col-sum">Summary</th></tr></thead>
+        <tbody id="poolRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-live" hidden>
+    <div class="live-grid">
+      <div>
+        <h2>Call a candidate now</h2>
+        <p class="hint">Hirefy phones them, runs the screen, and adds them to the ranking when the call ends.</p>
+        <form id="callForm" autocomplete="off">
+          <div class="f full"><label for="f-pass">Passcode</label><input id="f-pass" type="password" required></div>
+          <div class="f"><label for="f-name">Candidate name</label><input id="f-name" required></div>
+          <div class="f"><label for="f-phone">Phone</label><input id="f-phone" type="tel" placeholder="+91 98765 43210" value="+91" required></div>
+          <div class="f"><label for="f-role">Role</label><input id="f-role" value="Sales Executive" required></div>
+          <div class="f"><label for="f-co">Company</label><input id="f-co" value="Acme SaaS" required></div>
+          <div class="f full"><label for="f-note">Short resume note</label><textarea id="f-note" placeholder="e.g. 2 years inside sales at an edtech, B.Com, no SaaS experience"></textarea></div>
+          <button class="btn" id="callBtn" type="submit">Call now</button>
+        </form>
+      </div>
+      <div>
+        <div class="status" id="statusBox" aria-live="polite">
+          <span class="label">Call status</span>
+          <div class="big"><span class="dot" id="sDot"></span><span id="sLabel">No call in progress</span></div>
+          <div class="label" id="sSub">Fill in the form and press Call now.</div>
+          <div class="steps" id="sSteps"></div>
+          <div class="err" id="sErr" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside id="panel" aria-label="Candidate detail" aria-hidden="true"></aside>
+
+<script>
+(function(){
+'use strict';
+
+var QUALS = [['skills','Skills'],['experience','Experience'],['confidence','Confidence'],['culture_fit','Culture fit'],['curiosity','Curiosity'],['learning_drive','Learning drive'],['storytelling','Storytelling']];
+var QLABEL = {}; QUALS.forEach(function(q){QLABEL[q[0]]=q[1];});
+var PRESETS = [
+  {id:'balanced', name:'Balanced', w:{skills:30,experience:30,culture_fit:25,confidence:15}},
+  {id:'expert', name:'Ready expert', w:{skills:40,experience:40,confidence:10,culture_fit:10}},
+  {id:'learner', name:'Eager learner', w:{learning_drive:35,culture_fit:25,skills:15,confidence:15,experience:10}},
+  {id:'culture', name:'Culture first', w:{culture_fit:50,skills:20,experience:15,confidence:15}},
+  {id:'story', name:'Curious storyteller', w:{confidence:20,culture_fit:20,skills:15,experience:15,curiosity:15,storytelling:15}}
+];
+var MH = ['Fluent spoken English and Hindi','Based in or relocating to Bengaluru','At least 1 year in a customer-facing role'];
+var NE = 'Not enough evidence on the call to score this.';
+
+// q(score, reason, quote, quote)
+function q(s, r){ return {score:s, reason:r||NE, quotes:[].slice.call(arguments,2)}; }
+function mk(name, resume, arr, mh, flags, summary, shortExit){
+  var qs={}; QUALS.forEach(function(k,i){qs[k[0]]=arr[i]||q(null);});
+  return {id:'c'+(++mk.n), name:name, resume_only_score:resume, qualities:qs,
+    must_have_results:MH.map(function(t,i){return {text:t, met:mh[i]!==0};}),
+    flags:{other_role:flags.other||null, culture_standout:!!flags.culture, wants_internship:!!flags.intern, resume_mismatch:flags.mismatch||[]},
+    summary:summary, short_exit:!!shortExit};
+}
+mk.n=0;
+
+var C = [
+mk('Rahul Verma',35,[
+  q(5,'Ran a full discovery on the interviewer unprompted and handled the price objection cleanly.','Before I pitch anything, can I ask what your reps do today when a lead goes cold after the demo?','If price is the only thing left, we are not really talking about price. We are talking about whether you believe the number I showed you.'),
+  q(4,'Three years selling payment terminals door to door to kirana and pharmacy owners. No SaaS, but real quota-carrying work.','I closed about forty shops a month in Peenya. Nobody there gives you a second meeting, so you learn to earn the first one.'),
+  q(5,'Calm, unhurried, pushed back politely when challenged.','I do not have a degree from a big college, sir. What I have is three years of people saying no to my face and me coming back the next morning.'),
+  q(5,'Talks about customers as people he is responsible to, and credits his team without being asked.','One shop owner switched because of me, and then the machine failed in Diwali week. I sat in his shop for two days till it was fixed. That is the job.'),
+  q(5,'Asked sharp questions about the product, the buyer and the sales cycle.','Who signs the cheque in your deals, the sales head or the founder? Because the pitch is different for each.'),
+  q(5,'Taught himself CRM basics and spreadsheets at night; has a clear plan for closing his SaaS gap.','I did the free HubSpot course on my phone in the bus. I know I am behind on software selling. Give me ninety days and check.'),
+  q(5,'Every answer came as a short, specific story with a point.','The best sale I made, I did not speak for ten minutes. The pharmacist told me his whole problem himself. I only repeated it back with a price.')
+ ],[1,1,1],{},'Thin resume, no SaaS background, and the strongest call of the batch. Sells like someone who has done it on the street for years.'),
+
+mk('Ananya Iyer',88,[
+  q(5,'Structured qualification, multi-threading and a clear close plan.','I qualify on pain and timeline first. Budget shows up on its own once those two are real.','In a forty-seat deal I always find a second champion, because the first one goes on leave the week you need them.'),
+  q(5,'Four years of B2B SaaS, last two as a quota-carrying AE in HR tech.','Last year I closed one point four crore against a one point one target, mostly mid-market.'),
+  q(4,'Assured and precise; slightly rehearsed in places.','I would rather lose a deal in week two than in week ten. So I ask the uncomfortable question early.'),
+  q(4,'Collaborative, though mostly spoke about her own numbers.','I share my call recordings with the new joiners. It costs me nothing.'),
+  q(4,'Good questions on ICP and pricing.','Is your average deal seat-based or flat? That changes how I would prospect.'),
+  q(3,'Comfortable with what she knows; did not mention anything she is currently learning.','Honestly I have a process that works. I adjust it, I do not rebuild it.'),
+  q(4,'Clear and well-paced examples.','We lost that account to a cheaper tool, and I won it back eight months later with one email about their churn.')
+ ],[1,1,1],{},'The candidate the resume promised. Experienced SaaS closer with a repeatable process; ready from week one.'),
+
+mk('Karthik Reddy',81,[
+  q(4,'Strong on outbound and pipeline maths; lighter on negotiation.','I need about sixty conversations to get eight demos and two closes. If the first number drops, I know by Wednesday.'),
+  q(5,'Five years across SDR and AE roles at two SaaS firms.','I built the outbound motion at my last company from zero to about thirty lakh a month in pipeline.'),
+  q(4,'Steady and direct.','If a prospect says send me an email, I ask what should be in it. Usually that restarts the call.'),
+  q(4,'Process-minded and reliable; coaches juniors.','I run a Friday teardown of one lost deal with the SDRs. No blame, just what we missed.'),
+  q(3,'Asked about targets and territory, less about the product.','What is the quota and how was it set?'),
+  q(3,'Open to feedback but did not volunteer recent learning.','If my manager tells me something is off, I fix it that week.'),
+  q(null)
+ ],[1,1,1],{},'Dependable pipeline builder with five years in SaaS. Less flair than the top two, very low risk.'),
+
+mk('Priya Nair',70,[
+  q(4,'Good discovery and follow-up discipline.','I never end a call without a next step with a date on it.'),
+  q(4,'Two and a half years of inside sales for a logistics software company.','Mostly fleet owners. Long cycles, a lot of WhatsApp, a lot of patience.'),
+  q(4,'Composed; recovered well from a hard question.','I do not know that number offhand. I would rather tell you that than guess.'),
+  q(4,'Warm and team-oriented.','When a colleague was short of target I gave her two of my warm leads. We both hit that month.'),
+  q(4,'Curious about the customer base.','Which kind of customer renews without being chased? I would start by finding more of those.'),
+  q(4,'Actively building negotiation skills.','I am reading Never Split the Difference and trying one thing from it on each call.'),
+  q(4,'Tells tidy, relevant stories.','The owner hung up on me three times. The fourth time I opened with his own truck number. He stayed.')
+ ],[1,1,1],{},'Solid all-rounder with no weak area. A safe Good who would strengthen any team.'),
+
+mk('Sneha Kulkarni',62,[
+  q(3,'Excellent at retention and expansion conversations; avoids cold outreach and hard closes.','I am best once the customer is already in. I am honest that cold calling drains me.'),
+  q(3,'Two years in account management, no new-business quota.','I looked after about sixty accounts. My renewal rate was ninety four percent.'),
+  q(4,'Confident and honest about where she fits.','If you put me on pure hunting I will do it, but you would be wasting what I am good at.'),
+  q(5,'Deeply customer-centred; patient and generous.','A customer called me at eleven at night before their payroll run. I stayed on the line till it went through.'),
+  q(4,'Asked thoughtful questions about onboarding and churn.','What happens to a customer in the first thirty days after they sign? Who owns that?'),
+  q(4,'Keen to learn the product in depth.','I like to know the product better than support does. That is how I keep accounts.'),
+  q(4,'Vivid customer stories.','They were about to cancel. I asked them to show me their screen, and the problem was one setting. They are still a customer.')
+ ],[1,1,1],{other:'Customer Success Associate'},'Good for this role, better for another. A natural at keeping and growing accounts; reluctant hunter.'),
+
+mk('Arjun Mehta',28,[
+  q(2,'Understands the idea of selling but has no technique yet.','I think selling is mostly listening? I have not done a real pitch to a stranger yet.'),
+  q(1,'Final-year student. Only experience is selling sponsorships for a college fest.','We raised two lakh for the fest. I got eleven of the fourteen sponsors.'),
+  q(4,'Surprisingly poised for a fresher.','I know I am not what the job post asked for. I applied anyway because the worst you can say is no.'),
+  q(4,'Humble, coachable, good-humoured.','If I can sit next to your best rep for a month and just listen, I will carry their bag.'),
+  q(5,'Asked more and better questions than most experienced candidates.','Why do your customers buy from you and not the bigger company? I read your site and could not tell.'),
+  q(5,'Clear hunger to learn; has already started on his own.','I have been cold-emailing founders for practice. Forty sent, six replies. I track what worked.','Even an internship is fine. I want to learn this properly.'),
+  q(3,'Enthusiastic, sometimes rambling.','So the fest thing, basically, there was this one bakery owner, and long story short he said yes.')
+ ],[1,1,0],{intern:true},'Not ready for a quota, and knows it. Exceptional drive and curiosity; asked for an internship himself.'),
+
+mk('Vikram Singh',72,[
+  q(2,'Could not describe what he sells or how.','Yes. Sales. I do sales.'),
+  q(null),
+  q(1,'Long silences, one-word answers, asked to end the call early.','Hmm. Can you repeat?','Okay. Is it finished?'),
+  q(null),q(null),q(null),q(null)
+ ],[0,1,1],{},'Call ended after four minutes. Could not hold a basic conversation in English or Hindi despite a strong-looking resume.',true),
+
+mk('Meera Joshi',48,[
+  q(3,'Good rapport-building, weak on qualifying and closing.','I am good at getting people to talk. I am still learning when to ask for the order.'),
+  q(2,'Fourteen months in retail store sales; no B2B.','I sold phones and plans at a store in Jayanagar. Walk-in customers only.'),
+  q(3,'Soft-spoken but steady.','I am not loud. Customers still came back and asked for me by name.'),
+  q(5,'Stands out for integrity and care for teammates.','I told a customer not to buy the costlier plan because he did not need it. My manager was upset. He came back with his whole family.','When the new girl joined I gave up my lunch break for two weeks to train her. Nobody asked me to.'),
+  q(3,'Some questions about the team.','How big is the team, and who would I learn from?'),
+  q(4,'Wants to move into B2B and is preparing.','I watch demo calls on YouTube and write down the questions they ask.'),
+  q(4,'Warm, concrete stories.','An old uncle came in every week only to talk. In the fourth week he bought three connections.')
+ ],[1,1,1],{culture:true},'A Maybe on skill today, but the person everyone would want on the team. Worth keeping close.'),
+
+mk('Rohan Kapoor',90,[
+  q(2,'Fluent in jargon, could not walk through a single deal.','We leverage a consultative, value-led approach across the funnel.'),
+  q(2,'Described inbound tele-calling, not the enterprise sales on his resume.','Mostly I was calling leads the marketing team gave. Enterprise deals, I was supporting.'),
+  q(4,'Very confident delivery.','Numbers have never been a problem for me.'),
+  q(3,'Pleasant, but deflected when pressed.','That target was a team number, technically.'),
+  q(2,'Asked only about salary and incentives.','What is the fixed component?'),
+  q(2,'Did not see anything he needed to improve.','I think I am already at a senior level.'),
+  q(3,'Smooth talker; stories lacked detail.','There was a big client, a very big logo, and we closed it. I cannot name them.')
+ ],[1,1,1],{mismatch:['Resume says 4 years of enterprise SaaS sales; on the call he described about 8 months of inbound tele-calling.','Resume claims 140% of quota; he later said it was a team number he supported.']},'Best resume in the batch, and it does not survive the call. Claims and reality are far apart.'),
+
+mk('Farhan Sheikh',55,[
+  q(4,'Natural at demos and objection handling.','When they say it is expensive, I ask compared to what. Half the time they are comparing to doing nothing.'),
+  q(3,'Eighteen months selling an edtech product to schools.','School principals. You pitch in April, they decide in January.'),
+  q(4,'Relaxed and persuasive.','Give me any product for a week and I will find its one honest selling point.'),
+  q(4,'Upbeat, easy to work with.','I keep a list of who helped me on each deal and I thank them in the team group.'),
+  q(3,'A few questions on the buyer.','Is it the sales head who uses the tool or the reps?'),
+  q(4,'Picks things up fast and seeks feedback.','I record my own demos and listen at one point five speed. It is painful and it works.'),
+  q(5,'The best storyteller of the group.','The principal said no in the staff room. So I asked the maths teacher to try it in one class. By Friday the principal was calling me.')
+ ],[1,1,1],{},'Persuasive, likeable seller with a real gift for story. Less experience than the top tier, clear upside.'),
+
+mk('Divya Menon',78,[
+  q(3,'Knows the process but applies it mechanically.','I follow the script. If they go off script I bring them back.'),
+  q(4,'Three years of inside sales in insurance tech.','About a hundred and twenty calls a day. I was in the top third most months.'),
+  q(3,'Fine on familiar ground, hesitant off it.','I would need to check with my manager how to answer that.'),
+  q(3,'Polite and professional; kept things transactional.','I do my work and I do not get into office matters.'),
+  q(null),
+  q(3,'Willing to learn if trained.','If the company gives training I will complete it.'),
+  q(2,'Answers were lists rather than examples.','I did calling, follow-ups, updating CRM, and reporting.')
+ ],[1,1,1],{},'Experienced and steady, but works to a script. Resume reads stronger than the conversation.'),
+
+mk('Harpreet Kaur',84,[
+  q(4,'Sharp negotiator with a clean close.','I never discount without getting something back. A longer term, a case study, a referral.'),
+  q(5,'Six years of B2B sales, four in SaaS.','I ran the North region alone for two years. About two crore a year.'),
+  q(4,'Direct and sure of herself.','I will tell you what I can do and what I will not do. Saves us both time.'),
+  q(3,'Independent; prefers to work alone.','I do my best work when I am left to it.'),
+  q(3,'Asked about territory and remote policy.','Is the Bengaluru requirement fixed, or is that open for the right person?'),
+  q(2,'Not looking to change how she works.','At this point I know what works for me.'),
+  q(3,'Clear but brief.','Big deal, long cycle, I stayed on it for nine months. It closed.')
+ ],[1,0,1],{},'Would rank Good on ability, but she will not relocate from Chandigarh. Held at Maybe on that must-have.')
+];
+
+var state = {preset:'balanced', sel:null};
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function $(id){ return document.getElementById(id); }
+function preset(){ return PRESETS.filter(function(p){return p.id===state.preset;})[0]; }
+
+function score(c, p){
+  var w=(p||preset()).w, sum=0, tot=0;
+  for(var k in w){ var s=c.qualities[k] && c.qualities[k].score; if(typeof s==='number'){ sum+=s*w[k]; tot+=w[k]; } }
+  var overall = tot ? Math.round((sum/tot-1)/4*100) : 0;
+  var pick = overall>=80?'Amazing':overall>=65?'Good':overall>=45?'Maybe':'No';
+  var failed = c.must_have_results.some(function(m){return m.met===false;});
+  var capped = false;
+  if((c.short_exit||failed) && (pick==='Amazing'||pick==='Good')){ pick='Maybe'; capped=true; }
+  return {overall:overall, pick:pick, capped:capped, why:c.short_exit?'call ended early':'must-have not met'};
+}
+var ORDER={Amazing:0,Good:1,Maybe:2,No:3};
+function ranked(){
+  return C.map(function(c){return {c:c,s:score(c)};}).sort(function(a,b){
+    return ORDER[a.s.pick]-ORDER[b.s.pick] || b.s.overall-a.s.overall || a.c.name.localeCompare(b.c.name);
+  });
+}
+function flagChips(c){
+  var f=c.flags, o=[];
+  if(f.other_role) o.push('<span class="chip">Fits another role: '+esc(f.other_role)+'</span>');
+  if(f.culture_standout) o.push('<span class="chip">Culture standout</span>');
+  if(f.wants_internship) o.push('<span class="chip">Wants internship</span>');
+  if(f.resume_mismatch && f.resume_mismatch.length) o.push('<span class="chip warn">Resume mismatch</span>');
+  return o.join('');
+}
+function gap(c, s){
+  var r=c.resume_only_score;
+  if(typeof r!=='number') return '<span class="gap">Resume n/a → Call <b>'+s.overall+'</b></span>';
+  var d=s.overall-Math.round(r);
+  return '<span class="gap">Resume '+Math.round(r)+' → Call <b>'+s.overall+'</b><span class="delta'+(d>0?' up':'')+'">'+(d>0?'+':d<0?'−':'')+Math.abs(d)+'</span></span>';
+}
+function pickChip(s){ return '<span class="chip pick '+s.pick+'">'+s.pick+'</span>'; }
+function inPool(c){ var f=c.flags; return f.other_role||f.culture_standout||f.wants_internship; }
+
+function render(){
+  var list=ranked(), p=preset();
+  $('seg').innerHTML = PRESETS.map(function(x){return '<button type="button" data-p="'+x.id+'" aria-pressed="'+(x.id===state.preset)+'">'+x.name+'</button>';}).join('');
+  $('weights').innerHTML = Object.keys(p.w).map(function(k){return QLABEL[k]+' <b>'+p.w[k]+'</b>';}).join(' &middot; ');
+  var n={Amazing:0,Good:0};
+  list.forEach(function(x){ if(n[x.s.pick]!=null) n[x.s.pick]++; });
+  $('counts').innerHTML =
+    '<div class="count"><b>'+C.length+'</b><span>Applicants</span></div>'+
+    '<div class="count"><b>'+C.length+'</b><span>Called</span></div>'+
+    '<div class="count hl"><b>'+n.Amazing+'</b><span>Amazing</span></div>'+
+    '<div class="count"><b>'+n.Good+'</b><span>Good</span></div>';
+  $('rows').innerHTML = list.map(function(x,i){
+    var c=x.c, s=x.s;
+    return '<tr tabindex="0" data-id="'+c.id+'" class="'+(c.live?'live ':'')+(state.sel===c.id?'sel':'')+'">'+
+      '<td class="rank">'+(i+1)+'</td>'+
+      '<td class="name">'+esc(c.name)+(c.live?'<span class="badge">Live</span>':'')+'</td>'+
+      '<td>'+pickChip(s)+(s.capped?'<span class="capnote">Held: '+s.why+'</span>':'')+'</td>'+
+      '<td class="overall">'+s.overall+'</td>'+
+      '<td>'+gap(c,s)+'</td>'+
+      '<td class="col-flags"><div class="chips">'+flagChips(c)+'</div></td>'+
+      '<td class="summary col-sum">'+esc(c.summary)+'</td></tr>';
+  }).join('');
+  var pool=list.filter(function(x){return inPool(x.c);});
+  $('poolN').textContent = pool.length;
+  $('poolRows').innerHTML = pool.length ? pool.map(function(x){
+    var c=x.c;
+    return '<tr tabindex="0" data-id="'+c.id+'"><td class="name">'+esc(c.name)+(c.live?'<span class="badge">Live</span>':'')+'</td>'+
+      '<td><div class="chips">'+flagChips(c)+'</div></td><td>'+pickChip(x.s)+' <span class="gap">&nbsp;'+x.s.overall+'</span></td>'+
+      '<td class="summary col-sum">'+esc(c.summary)+'</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="empty">Nobody flagged yet.</td></tr>';
+  if(state.sel) renderPanel();
+}
+
+function pips(n){ var h='<span class="pips" aria-hidden="true">'; for(var i=1;i<=5;i++) h+='<i'+(i<=n?' class="on"':'')+'></i>'; return h+'</span>'; }
+function safeUrl(u){ return typeof u==='string' && /^https?:\/\//i.test(u) ? u : null; }
+
+function renderPanel(){
+  var c=C.filter(function(x){return x.id===state.sel;})[0]; if(!c) return;
+  var s=score(c), w=preset().w, f=c.flags;
+  var h='<button class="close" id="closeBtn" type="button">Close</button>'+
+    '<h2>'+esc(c.name)+(c.live?'<span class="badge">Live</span>':'')+'</h2>'+
+    '<div class="phead">'+pickChip(s)+'<span class="overall">'+s.overall+'</span>'+gap(c,s)+
+    (typeof c.duration_s==='number'?'<span>'+Math.floor(c.duration_s/60)+'m '+Math.round(c.duration_s%60)+'s call</span>':'')+'</div>'+
+    (s.capped?'<p class="capnote">Held at Maybe: '+s.why+'.</p>':'')+
+    '<p class="lede">'+esc(c.summary)+'</p>';
+  var rec=safeUrl(c.recording_url);
+  if(rec) h+='<h3>Recording</h3><audio controls preload="none" src="'+esc(rec)+'"></audio>';
+  h+='<h3>Qualities <span style="text-transform:none;letter-spacing:0">· weights for '+esc(preset().name)+'</span></h3>';
+  QUALS.forEach(function(k){
+    var qq=c.qualities[k[0]]||{score:null,reason:NE,quotes:[]}, has=typeof qq.score==='number';
+    h+='<div class="q'+(has?'':' unscored')+'"><div class="qtop"><span class="qname">'+k[1]+'</span>'+
+      '<span class="qw">'+(w[k[0]]?'weight '+w[k[0]]:'not weighted')+'</span>'+pips(has?qq.score:0)+
+      '<span class="qscore">'+(has?qq.score+'/5':'n/a')+'</span></div>'+
+      '<div class="qreason">'+esc(qq.reason||NE)+'</div>'+
+      (qq.quotes||[]).slice(0,2).map(function(t){return '<blockquote>“'+esc(t)+'”</blockquote>';}).join('')+'</div>';
+  });
+  h+='<h3>Must-haves</h3><ul class="plain">'+(c.must_have_results.length?c.must_have_results.map(function(m){
+    return '<li><span class="mh'+(m.met?'':' no')+'">'+(m.met?'Met':'Not met')+'</span><span>'+esc(m.text)+'</span></li>';}).join(''):'<li class="label">None set.</li>')+'</ul>';
+  h+='<h3>Flags</h3>';
+  var fl=flagChips(c);
+  h+= fl ? '<div class="chips">'+fl+'</div>' : '<p class="label">No flags.</p>';
+  if(c.short_exit) h+='<p class="qreason" style="margin-top:8px">Call ended early: the candidate could not hold a basic conversation.</p>';
+  if(f.resume_mismatch && f.resume_mismatch.length) h+='<ul class="plain" style="margin-top:6px">'+f.resume_mismatch.map(function(t){return '<li><span class="mh no">Mismatch</span><span>'+esc(t)+'</span></li>';}).join('')+'</ul>';
+  if(c.transcript) h+='<h3>Transcript</h3><pre>'+esc(c.transcript)+'</pre>';
+  $('panel').innerHTML=h;
+}
+function openPanel(id){
+  state.sel=id; render();
+  $('panel').classList.add('open'); $('scrim').classList.add('open'); $('panel').setAttribute('aria-hidden','false');
+  $('panel').scrollTop=0;
+  var b=$('closeBtn'); if(b) b.focus();
+}
+function closePanel(){
+  var id=state.sel; state.sel=null;
+  $('panel').classList.remove('open'); $('scrim').classList.remove('open'); $('panel').setAttribute('aria-hidden','true');
+  render();
+  var r=document.querySelector('tr[data-id="'+id+'"]'); if(r && r.offsetParent) r.focus();
+}
+function showTab(t){
+  ['rank','pool','live'].forEach(function(x){ $('view-'+x).hidden = x!==t; });
+  [].forEach.call(document.querySelectorAll('.tab'),function(b){ b.setAttribute('aria-selected', b.dataset.tab===t); });
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target;
+  var pb=t.closest('[data-p]'); if(pb){ state.preset=pb.dataset.p; render(); return; }
+  var tb=t.closest('.tab'); if(tb){ showTab(tb.dataset.tab); return; }
+  if(t.id==='closeBtn'||t.id==='scrim'){ closePanel(); return; }
+  var tr=t.closest('tr[data-id]'); if(tr) openPanel(tr.dataset.id);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape' && state.sel){ closePanel(); return; }
+  if((e.key==='Enter'||e.key===' ') && e.target.matches && e.target.matches('tr[data-id]')){ e.preventDefault(); openPanel(e.target.dataset.id); }
+});
+
+/* ---------- live call ---------- */
+var STATUS = {
+  'queued':['Queued…','Waiting for a free line.',0],
+  'scheduled':['Queued…','Waiting for a free line.',0],
+  'initiated':['Dialling…','Placing the call.',0],
+  'ringing':['Ringing…','Waiting for the candidate to pick up.',1],
+  'in-progress':['On call','The screen is under way. This usually takes 6 to 10 minutes.',2],
+  'call-disconnected':['Scoring…','Call ended. Reading the transcript and scoring.',3],
+  'completed':['Scoring…','Call ended. Reading the transcript and scoring.',3],
+  'no-answer':['No answer','The candidate did not pick up.',-1],
+  'busy':['Line busy','The candidate was on another call.',-1],
+  'failed':['Call failed','The call could not be connected.',-1],
+  'canceled':['Call cancelled','The call was cancelled before it connected.',-1],
+  'error':['Call failed','Something went wrong during the call.',-1]
+};
+var STEPS=['Dialling','Ringing','On call','Scoring','Ranked'];
+var timer=null, liveN=0;
+
+function setStatus(label, sub, step, active){
+  $('sLabel').textContent=label; $('sSub').textContent=sub||'';
+  $('sDot').className='dot'+(active?' on':'');
+  $('sSteps').innerHTML = step==null||step<0 ? '' : STEPS.map(function(s,i){return '<span class="'+(i<step?'done':i===step?'now':'')+'">'+(i+1)+'. '+s+'</span>';}).join('');
+}
+function setErr(m){ $('sErr').hidden=!m; $('sErr').textContent=m||''; }
+function finish(){ if(timer){clearTimeout(timer);timer=null;} $('callBtn').disabled=false; $('callBtn').textContent='Call now'; }
+
+function addLive(name, r){
+  var qs={}; QUALS.forEach(function(k){
+    var x=(r.qualities||{})[k[0]]||{}, sc=Number(x.score);
+    qs[k[0]]={score:(x.score!=null && sc>=1 && sc<=5)?sc:null, reason:x.reason||NE, quotes:Array.isArray(x.quotes)?x.quotes.map(String):[]};
+  });
+  var f=r.flags||{};
+  var c={id:'live'+(++liveN), live:true, name:name, qualities:qs,
+    resume_only_score: typeof r.resume_only_score==='number'?r.resume_only_score:null,
+    must_have_results:(Array.isArray(r.must_have_results)?r.must_have_results:[]).map(function(m){return {text:String(m.text||''), met:m.met!==false};}),
+    flags:{other_role:f.other_role||null, culture_standout:!!f.culture_standout, wants_internship:!!f.wants_internship, resume_mismatch:Array.isArray(f.resume_mismatch)?f.resume_mismatch.map(String):[]},
+    summary:r.summary||'', short_exit:!!r.short_exit, transcript:r.transcript||'', recording_url:r.recording_url||null,
+    duration_s: typeof r.duration_s==='number'?r.duration_s:null};
+  C.push(c); return c;
+}
+
+function poll(id, pass, name, fails){
+  fetch('/api/status?id='+encodeURIComponent(id)+'&passcode='+encodeURIComponent(pass),{cache:'no-store'})
+  .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok) throw new Error(j.error||('Server replied '+res.status)); return j; }); })
+  .then(function(j){
+    setErr('');
+    var st=String(j.status||'').toLowerCase(), m=STATUS[st];
+    if(j.done && j.result){
+      var c=addLive(name, j.result);
+      setStatus('Ranked', name+' has been scored and added to the ranking.', 5, false);
+      finish(); showTab('rank'); openPanel(c.id); return;
+    }
+    if(j.done){
+      setStatus(m?m[0]:'Call ended', (m&&m[2]<0?m[1]:'The call ended without a conversation to score.')+' Nothing was added to the ranking.', null, false);
+      finish(); return;
+    }
+    if(m && m[2]>=0) setStatus(m[0], m[1], m[2], true);
+    else if(m) setStatus(m[0], m[1], null, true);
+    else setStatus(st?st.charAt(0).toUpperCase()+st.slice(1).replace(/-/g,' ')+'…':'Connecting…','Waiting for an update.',0,true);
+    timer=setTimeout(function(){poll(id,pass,name,0);},4000);
+  })
+  .catch(function(err){
+    if(fails>=4){ setStatus('Lost contact','We stopped getting updates for this call.',null,false); setErr(err.message||'Could not reach the server.'); finish(); return; }
+    setErr('Update missed, retrying… ('+(err.message||'network')+')');
+    timer=setTimeout(function(){poll(id,pass,name,fails+1);},4000);
+  });
+}
+
+$('callForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  if(timer) return;
+  var name=$('f-name').value.trim(), phone=$('f-phone').value.replace(/[\s-]/g,''), pass=$('f-pass').value;
+  setErr('');
+  if(!/^\+91[6-9]\d{9}$/.test(phone)){ setErr('Enter an Indian mobile number as +91 followed by 10 digits.'); $('f-phone').focus(); return; }
+  $('callBtn').disabled=true; $('callBtn').textContent='Calling…';
+  setStatus('Dialling…','Placing the call to '+name+'.',0,true);
+  fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({passcode:pass,name:name,phone:phone,role:$('f-role').value.trim(),company:$('f-co').value.trim(),resume_note:$('f-note').value.trim()})})
+  .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ return {ok:res.ok,status:res.status,j:j}; }); })
+  .then(function(r){
+    if(r.j.error || !r.j.execution_id) throw new Error(r.j.error || ('Server replied '+r.status));
+    timer=setTimeout(function(){poll(r.j.execution_id,pass,name,0);},1500);
+  })
+  .catch(function(err){
+    setStatus('Could not start the call','',null,false);
+    setErr(err.message && err.message!=='Failed to fetch' ? err.message : 'Could not reach the calling service. Check the page is being served by the Hirefy server.');
+    finish();
+  });
+});
+
+render();
+})();
+</script>
+</body>
+</html>
