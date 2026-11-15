@@ -426,6 +426,9 @@ form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
 .jd-up{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
 .jd-up .btn2{cursor:pointer}
+.lc.idle p{margin:4px 0 8px}
+.lc-go{color:#9ccfd8;font-weight:600;text-decoration:none;font-size:13px}
+.lc-go:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -1034,9 +1037,9 @@ function renderRail(){
   } else if(busy && st!=='idle'){
     h='<div class="lc real"><div class="lc-top"><span>'+esc(liveName||'Candidate')+'</span><span class="num">'+esc($('sLabel').textContent)+'</span></div><p>'+esc($('sSub').textContent)+'</p></div>';
   }
-  h+='<div class="lc"><div class="lc-top"><span>Ravi Kumar</span><span class="num">06:12</span></div><p>Story + role questions · Hinglish</p><div class="bar"><i style="width:62%"></i></div></div>';
-  if(!h.match(/lc real/)) h+='<div class="lc"><div class="lc-top"><span>Meera Joshi</span><span class="num">01:48</span></div><p>Warm-up · English</p><div class="bar"><i style="width:18%"></i></div></div>';
+  if(!h) h='<div class="lc idle"><div class="lc-top"><span>No calls right now</span></div><p>Start one from Calls. It shows up here live.</p><a class="lc-go" href="#calls">Start a call →</a></div>';
   $('liveCalls').innerHTML=h;
+  var lv=document.querySelector('.oncall .live'); if(lv) lv.style.visibility=h.indexOf('lc real')>-1?'visible':'hidden';
 }
 function stopTick(){ if(tick){ clearInterval(tick); tick=null; } }
 function paintTimer(){
