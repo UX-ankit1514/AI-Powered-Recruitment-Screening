@@ -1,82 +1,78 @@
+import Link from "next/link";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { canEdit, getMembership } from "@/components/server/session";
+import { loadDashboard, loadJobs } from "@/components/dashboard/load";
+import { DashboardView } from "@/components/dashboard/dashboard-view";
 
 export const metadata = { title: "Dashboard · Pingo" };
 
-const ROLE_LABEL = { admin: "Admin", recruiter: "Recruiter", hiring_manager: "Hiring manager" } as const;
-
-export default function DashboardPage() {
+export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   return (
-    <Suspense fallback={<p className="text-text-3">Loading dashboard</p>}>
-      <DashboardContent />
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function DashboardContent() {
-  const supabase = await createClient();
-  // RLS scopes both queries to the signed-in user's company.
-  const [{ data: memberships }, { data: jobs, error: jobsError }] = await Promise.all([
-    supabase.from("members").select("role, company:companies(id, name)"),
-    supabase.from("jobs").select("id, title, status, ats_mode, languages, created_at").order("created_at", { ascending: false }),
-  ]);
+async function DashboardContent({ searchParams }: { searchParams: PageProps<"/dashboard">["searchParams"] }) {
+  const [sp, me] = await Promise.all([searchParams, getMembership()]);
+  if (!me) {
+    return (
+      <EmptyState title="Your account is not linked to a company yet" body="Ask your Pingo admin to add you, then sign in again." />
+    );
+  }
+  const jobs = await loadJobs(me);
+  const requested = typeof sp.job === "string" ? sp.job : undefined;
+  const data = await loadDashboard(me, jobs, requested);
+  if (!data) {
+    return (
+      <EmptyState
+        title="No jobs yet"
+        body="Add the job description and how you want people ranked. Pingo calls every applicant and ranks them here."
+        action={canEdit(me.role) ? { href: "/jobs/new", label: "Create a job" } : undefined}
+      />
+    );
+  }
+  return <DashboardView data={data} canEdit={canEdit(me.role)} />;
+}
 
-  const { data: auth } = await supabase.auth.getClaims();
-  const mine = memberships?.find(() => true);
-  const companyName = mine?.company?.name;
-
+function EmptyState({ title, body, action }: { title: string; body: string; action?: { href: string; label: string } }) {
   return (
-    <div>
-      <p className="mb-1.5 text-[13px] text-text-3">{companyName ?? "No company"}</p>
-      <h1 className="text-[30px] font-semibold leading-tight tracking-tight">Dashboard</h1>
-      <p className="mt-1 text-text-2">
-        Signed in as {String(auth?.claims.email ?? "")}
-        {mine ? ` · ${ROLE_LABEL[mine.role]}` : ""}
-      </p>
-
-      {!companyName ? (
-        <div className="mt-6 rounded-lg border border-line bg-surface p-6 shadow-card">
-          <p className="font-medium">Your account is not linked to a company yet.</p>
-          <p className="mt-1 text-text-2">Ask your Pingo admin to add you.</p>
+    <>
+      <div className="phead">
+        <div>
+          <h1>Dashboard</h1>
         </div>
-      ) : (
-        <section className="mt-6 rounded-lg border border-line bg-surface shadow-card">
-          <header className="flex items-baseline justify-between border-b border-line px-5 py-4">
-            <h2 className="text-[17px] font-semibold">Jobs</h2>
-            <span className="num text-[12.5px] text-text-3">{jobs?.length ?? 0}</span>
-          </header>
-          {jobsError ? (
-            <p className="px-5 py-4 text-red">Could not load jobs. Refresh to try again.</p>
-          ) : jobs && jobs.length > 0 ? (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[11.5px] uppercase tracking-wide text-text-3">
-                  <th className="px-5 py-2.5 font-medium">Title</th>
-                  <th className="px-5 py-2.5 font-medium">Who gets a call</th>
-                  <th className="px-5 py-2.5 font-medium">Languages</th>
-                  <th className="px-5 py-2.5 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr key={job.id} className="border-t border-line">
-                    <td className="px-5 py-3 font-medium">{job.title}</td>
-                    <td className="px-5 py-3 text-text-2">{job.ats_mode === "ats_filter" ? "ATS filter" : "Everyone"}</td>
-                    <td className="px-5 py-3 text-text-2">{job.languages.join(", ")}</td>
-                    <td className="px-5 py-3">
-                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[12.5px] font-medium capitalize text-accent-ink">
-                        {job.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="px-5 py-4 text-text-2">No jobs yet.</p>
-          )}
-        </section>
-      )}
+      </div>
+      <div className="card sec" style={{ maxWidth: 640 }}>
+        <h2>{title}</h2>
+        <p className="hint" style={{ marginTop: 4 }}>
+          {body}
+        </p>
+        {action ? (
+          <Link className="btn" href={action.href}>
+            {action.label}
+          </Link>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading dashboard">
+      <div className="phead">
+        <div>
+          <div className="crumb">Jobs</div>
+          <h1 className="muted">Loading</h1>
+        </div>
+      </div>
+      <div className="kpis">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="card kpi" style={{ height: 126 }} />
+        ))}
+      </div>
     </div>
   );
 }
