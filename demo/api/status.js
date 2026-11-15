@@ -93,7 +93,8 @@ export default async function handler(req, res) {
   try {
     if (!transcript) throw new Error("empty transcript");
     const resumeNote = ex?.context_details?.recipient_data?.resume_note || "";
-    const scored = await score(transcript, resumeNote && resumeNote !== "not provided" ? resumeNote : "");
+    const rd = ex?.context_details?.recipient_data || {};
+    const scored = await score(transcript, resumeNote && resumeNote !== "not provided" ? resumeNote : "", rd.role || "", rd.must_haves || "");
     const out = {
       status: "completed",
       done: true,

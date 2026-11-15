@@ -1338,7 +1338,7 @@ $('callForm').addEventListener('submit',function(e){
   setStatus('Dialling…','Placing the call to '+name+'.',0,true);
   fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({passcode:pass,name:name,phone:phone,role:$('f-role').value.trim(),company:$('f-co').value.trim(),resume_note:$('f-note').value.trim(),
-      resume_q1:String(rq[0]||''),resume_q2:String(rq[1]||'')})})
+      resume_q1:String(rq[0]||''),resume_q2:String(rq[1]||''),must_haves:jobExtras().must_haves,jd_summary:jobExtras().jd_summary})})
   .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ return {ok:res.ok,status:res.status,j:j}; }); })
   .then(function(r){
     if(r.j.error || !r.j.execution_id) throw new Error(r.j.error || ('Server replied '+r.status));
@@ -1383,7 +1383,7 @@ $('webBtn').addEventListener('click',function(){
     if(typeof window.BolnaWebCall!=='function') throw new Error('The in-browser call could not load. Try the sample call instead.');
     var call=webCall=new window.BolnaWebCall({
       sessionUrl:'/api/session?passcode='+encodeURIComponent(pass),
-      userData:{name:name, role:$('f-role').value.trim(), company:$('f-co').value.trim(), resume_note:$('f-note').value.trim(), resume_q1:String(rq[0]||''), resume_q2:String(rq[1]||'')}
+      userData:{name:name, role:$('f-role').value.trim(), company:$('f-co').value.trim(), resume_note:$('f-note').value.trim(), resume_q1:String(rq[0]||''), resume_q2:String(rq[1]||''), must_haves:jobExtras().must_haves, jd_summary:jobExtras().jd_summary}
     });
     call.on('state-change',function(st){
       if(ended) return;
@@ -1536,6 +1536,7 @@ window.hirefyDemo={setStatus:setStatus};
   });
 })();
 
+function jobExtras(){ var mh=(state.mh||[]).join('; '); var jd=(($('s-jd')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,1200); return {must_haves:mh, jd_summary:jd}; }
 function focusRow(id){
   try{ var q=document.querySelector('#view-dashboard input[type=search], input[aria-label="Search candidates"]'); if(q && q.value){ q.value=''; q.dispatchEvent(new Event('input',{bubbles:true})); } }catch(e){}
   location.hash='dashboard';

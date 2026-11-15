@@ -19,7 +19,8 @@ export default async function handler(req, res) {
     resume_note: cap(body.resume_note, 600) || "not provided",
     resume_q1: cap(body.resume_q1, 300),
     resume_q2: cap(body.resume_q2, 300),
-    must_haves: "2+ years of sales experience; comfortable speaking English",
+    must_haves: cap(body.must_haves, 600) || "Comfortable speaking English",
+    jd_summary: cap(body.jd_summary, 1200),
   };
 
   try {
