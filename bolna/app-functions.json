@@ -1,0 +1,53 @@
+{
+ "tools": [
+  {
+   "key": "custom_task",
+   "name": "reschedule_call",
+   "parameters": {
+    "type": "object",
+    "required": [
+     "call_id",
+     "action",
+     "slot_iso"
+    ],
+    "properties": {
+     "action": {
+      "enum": [
+       "list",
+       "book"
+      ],
+      "type": "string",
+      "description": "'list' to fetch available slots; 'book' to book the slot the candidate chose."
+     },
+     "call_id": {
+      "type": "string",
+      "description": "Internal call reference from the prompt variable call_id. Never ask the candidate for it."
+     },
+     "slot_iso": {
+      "type": "string",
+      "description": "For action 'book': the exact value from slot_isos returned by the 'list' call for the slot the candidate chose. For action 'list': empty string \"\"."
+     }
+    }
+   },
+   "description": "Book a callback when the candidate cannot talk now or asks to be called at another time (busy, driving, in a meeting, noisy, unwell, 'call me later', 'call me tomorrow', 'kal call karna', 'abhi nahi'). First call with action='list' to get available callback slots, offer up to 3 of them, then call with action='book' and the exact slot_iso the candidate chose. Only confirm a callback after a 'book' result with booked=true. Do not call this for any other reason.",
+   "pre_call_message": "One moment, let me check."
+  }
+ ],
+ "tools_params": {
+  "reschedule_call": {
+   "url": "https://pingo-app-nine.vercel.app/api/bolna/reschedule",
+   "nodes": null,
+   "param": "{\"call_id\": \"%(call_id)s\", \"action\": \"%(action)s\", \"slot_iso\": \"%(slot_iso)s\"}",
+   "scope": null,
+   "method": "POST",
+   "headers": {
+    "Content-Type": "application/json",
+    "x-bolna-secret": "<SECRET>"
+   },
+   "api_token": null,
+   "pre_call_message": null,
+   "pre_call_webhook_url": null,
+   "pre_call_webhook_param": null
+  }
+ }
+}

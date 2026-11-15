@@ -1,0 +1,232 @@
+{
+ "id": "e155c924-5640-467a-b216-1bb44240497e",
+ "agent_name": "Pingo interviewer (app)",
+ "agent_status": "processed",
+ "agent_welcome_message": "Hi, am I speaking with {{first_name}}?",
+ "agent_type": "other",
+ "webhook_url": "https://pingo-app-nine.vercel.app/api/webhooks/bolna?secret=<SECRET>",
+ "tasks": [
+  {
+   "task_type": "conversation",
+   "toolchain": {
+    "execution": "parallel",
+    "pipelines": [
+     [
+      "transcriber",
+      "llm",
+      "synthesizer"
+     ]
+    ]
+   },
+   "task_config": {
+    "voicemail": false,
+    "use_fillers": false,
+    "dtmf_enabled": false,
+    "ambient_noise": false,
+    "inbound_limit": -1,
+    "backchanneling": false,
+    "call_terminate": 600,
+    "auto_reschedule": false,
+    "optimize_latency": true,
+    "incremental_delay": 900,
+    "ambient_noise_track": null,
+    "call_hangup_message": null,
+    "max_silence_repeats": null,
+    "check_if_user_online": true,
+    "hangup_after_LLMCall": false,
+    "hangup_after_silence": 15,
+    "welcome_message_delay": 0,
+    "whitelist_phone_numbers": null,
+    "call_cancellation_prompt": null,
+    "disallow_unknown_numbers": false,
+    "language_detection_turns": null,
+    "noise_cancellation_level": null,
+    "voicemail_check_interval": 7.0,
+    "voicemail_detection_time": 2.5,
+    "check_user_online_message": "Hey, are you still there",
+    "backchanneling_message_gap": 5,
+    "backchanneling_start_delay": 5,
+    "interruption_backoff_period": 100,
+    "interruptible_hangup_message": false,
+    "voicemail_detection_duration": 30.0,
+    "discard_pre_welcome_utterance": false,
+    "voicemail_min_transcript_length": 7,
+    "number_of_words_for_interruption": 1,
+    "trigger_user_online_message_after": 10,
+    "user_online_message_in_llm_history": false
+   },
+   "tools_config": {
+    "s2s": null,
+    "input": {
+     "format": "wav",
+     "provider": "plivo"
+    },
+    "output": {
+     "format": "wav",
+     "provider": "plivo"
+    },
+    "api_tools": {
+     "tools": [
+      {
+       "key": "custom_task",
+       "name": "reschedule_call",
+       "parameters": {
+        "type": "object",
+        "required": [
+         "call_id",
+         "action",
+         "slot_iso"
+        ],
+        "properties": {
+         "action": {
+          "enum": [
+           "list",
+           "book"
+          ],
+          "type": "string",
+          "description": "'list' to fetch available slots; 'book' to book the slot the candidate chose."
+         },
+         "call_id": {
+          "type": "string",
+          "description": "Internal call reference from the prompt variable call_id. Never ask the candidate for it."
+         },
+         "slot_iso": {
+          "type": "string",
+          "description": "For action 'book': the exact value from slot_isos returned by the 'list' call for the slot the candidate chose. For action 'list': empty string \"\"."
+         }
+        }
+       },
+       "description": "Book a callback when the candidate cannot talk now or asks to be called at another time (busy, driving, in a meeting, noisy, unwell, 'call me later', 'call me tomorrow', 'kal call karna', 'abhi nahi'). First call with action='list' to get available callback slots, offer up to 3 of them, then call with action='book' and the exact slot_iso the candidate chose. Only confirm a callback after a 'book' result with booked=true. Do not call this for any other reason.",
+       "pre_call_message": "One moment, let me check."
+      }
+     ],
+     "tools_params": {
+      "reschedule_call": {
+       "url": "https://pingo-app-nine.vercel.app/api/bolna/reschedule",
+       "nodes": null,
+       "param": "{\"call_id\": \"%(call_id)s\", \"action\": \"%(action)s\", \"slot_iso\": \"%(slot_iso)s\"}",
+       "scope": null,
+       "method": "POST",
+       "headers": {
+        "Content-Type": "application/json",
+        "x-bolna-secret": "<SECRET>"
+       },
+       "api_token": null,
+       "pre_call_message": null,
+       "pre_call_webhook_url": null,
+       "pre_call_webhook_param": null
+      }
+     }
+    },
+    "llm_agent": {
+     "agent_type": "simple_llm_agent",
+     "llm_config": {
+      "stop": null,
+      "min_p": 0.1,
+      "model": "gpt-4.1-mini",
+      "top_k": 0,
+      "top_p": 0.9,
+      "family": "openai",
+      "base_url": null,
+      "provider": "openai",
+      "verbosity": null,
+      "extra_body": null,
+      "max_tokens": 200,
+      "temperature": 0.4,
+      "request_json": false,
+      "agent_flow_type": "streaming",
+      "presence_penalty": 0.0,
+      "reasoning_effort": null,
+      "compact_threshold": null,
+      "frequency_penalty": 0.0,
+      "use_responses_api": false,
+      "extraction_details": null,
+      "summarization_details": null
+     },
+     "agent_flow_type": "streaming"
+    },
+    "web_search": null,
+    "agent_names": null,
+    "synthesizer": {
+     "stream": true,
+     "caching": true,
+     "provider": "elevenlabs",
+     "buffer_size": 250,
+     "audio_format": "wav",
+     "provider_config": {
+      "model": "eleven_turbo_v2_5",
+      "speed": 1.0,
+      "style": 0.0,
+      "voice": "Nila",
+      "voice_id": "V9LCAAi4tTlqe9JadbCo",
+      "temperature": 0.5,
+      "similarity_boost": 0.75,
+      "pronunciation_dictionary_locators": null
+     },
+     "pronunciation_rules": null
+    },
+    "transcriber": {
+     "task": "transcribe",
+     "delay": "medium",
+     "model": "nova-3",
+     "active": null,
+     "stream": true,
+     "context": null,
+     "encoding": "linear16",
+     "keywords": null,
+     "language": "hi",
+     "provider": "deepgram",
+     "endpointing": 250,
+     "mip_opt_out": null,
+     "multilingual": null,
+     "deepgram_host": null,
+     "eot_threshold": null,
+     "hinglish_mode": false,
+     "sampling_rate": 16000,
+     "vad_threshold": 0.5,
+     "eot_timeout_ms": null,
+     "language_hints": null,
+     "noise_reduction": false,
+     "assemblyai_config": null,
+     "deepgram_flux_host": null,
+     "eager_eot_threshold": null,
+     "vad_prefix_padding_ms": 300,
+     "deepgram_host_protocol": null
+    },
+    "multilingual_config": null,
+    "switch_handoff_messages": null,
+    "switch_tool_description": null
+   }
+  }
+ ],
+ "created_at": "2026-11-15T12:26:17.401405",
+ "updated_at": "2026-11-15T12:26:17.428583",
+ "gpt_assistants": null,
+ "custom_analytics": null,
+ "inbound_phone_number": null,
+ "restricted": false,
+ "calling_guardrails": null,
+ "webhook_headers": null,
+ "sip_header_variables": null,
+ "ingest_lookup_key": null,
+ "webhook_config": null,
+ "creation_source": "from_scratch",
+ "parent_agent_id": null,
+ "source_agent_id": null,
+ "created_by": "4562b406-519c-49f7-8b66-721d6116a449",
+ "call_summary_enabled": false,
+ "agent_category": "simple_llm_agent",
+ "sip_headers": null,
+ "memory_config": null,
+ "dispositions": [
+  "01d5abe7-979d-56cc-b392-58e2d41519dd"
+ ],
+ "single_prompt_ui": false,
+ "ingest_source_config": null,
+ "composition_by_language": null,
+ "agent_prompts": {
+  "task_1": {
+   "system_prompt": "<see bolna/app-prompt.txt>"
+  }
+ }
+}
