@@ -439,6 +439,19 @@ tr.flash td:first-child{animation:rowflash 3s ease-out,rowbar 3s ease-out}
 .logo-mark.lm2 img{width:36px;height:36px;display:block}
 .wm-name{font-weight:800;letter-spacing:-.03em;font-size:22px;font-variation-settings:"opsz" 96;position:relative}
 .wm-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#EA9D34;margin-left:2px;vertical-align:baseline}
+/* batch calling */
+dialog.bd{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);color:var(--text);padding:0;width:min(760px,calc(100vw - 32px));max-height:calc(100vh - 48px);box-shadow:0 20px 60px rgb(25 23 36 / .25)}
+dialog.bd::backdrop{background:rgb(25 23 36 / .45)}
+.bd-in{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+.bd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.bd-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bd-tbl{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+.bd-tbl td,.bd-tbl th{padding:8px 10px;font-size:13px}
+.bd-tbl td:last-child,.bd-tbl th:last-child{text-align:right}
+.bd-prog{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.bd-bar{height:6px;background:var(--sunken);border-radius:99px;overflow:hidden}.bd-bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.bd-bad{font-size:12.5px;color:var(--red)}
+.chip.run{background:var(--accent-soft);color:var(--accent-ink)}.chip.ok{background:var(--accent);color:#fff}.chip.bad{background:var(--red-bg);color:var(--red)}.chip.end{background:var(--peach-bg);color:var(--peach-ink)}
 </style>
 </head>
 <body>
@@ -473,8 +486,8 @@ tr.flash td:first-child{animation:rowflash 3s ease-out,rowbar 3s ease-out}
       </div>
       <div class="actions">
         <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search name or skill" aria-label="Search candidates"></div>
-        <button class="btn2" type="button" data-goto="calls">Upload applicants</button>
-        <button class="btn" type="button" data-goto="calls">Call next batch</button>
+        <button class="btn2" type="button" data-batch="upload">Upload &amp; call batch</button>
+        <button class="btn" type="button" data-batch="start">Call next batch</button>
       </div>
     </div>
 
@@ -701,6 +714,20 @@ tr.flash td:first-child{animation:rowflash 3s ease-out,rowbar 3s ease-out}
   </section>
   </main>
 </div>
+<dialog class="bd" id="batchDlg" aria-labelledby="bdTitle">
+  <div class="bd-in">
+    <div class="bd-head"><div><h2 id="bdTitle">Call a batch</h2><p class="hint" style="margin:4px 0 0">Upload a CSV or paste one applicant per line. Pingo calls two at a time and ranks each one as their call ends.</p></div><button class="btn2 sm" type="button" data-bact="close">Close</button></div>
+    <div id="bdInput">
+      <div class="bd-row"><input id="bdFile" type="file" accept=".csv,text/csv,.txt" style="flex:1;min-width:220px" aria-label="Upload CSV"><a class="label" id="bdSample" download="pingo-batch-sample.csv">Download sample CSV</a></div>
+      <textarea id="bdPaste" rows="5" style="margin-top:10px" aria-label="Paste applicants" placeholder="Name, +91XXXXXXXXXX, short resume note&#10;Riya Sharma, 98765 43210, 2 yrs inside sales at an edtech"></textarea>
+    </div>
+    <p class="label" id="bdCount">No applicants yet.</p>
+    <div class="bd-bad" id="bdBad" hidden></div>
+    <div class="bd-prog" id="bdProg" hidden></div><div class="bd-bar" id="bdBarW" hidden><i id="bdBar" style="width:0%"></i></div>
+    <div class="bd-tbl" id="bdTblW" hidden><table><thead><tr><th>Name</th><th>Phone</th><th>Resume note</th><th>Status</th></tr></thead><tbody id="bdRows"></tbody></table></div>
+    <div class="bd-row"><button class="btn" type="button" id="bdStart" data-bact="start" disabled>Call 0 candidates</button><button class="btn2" type="button" id="bdStop" data-bact="stop" hidden>Stop after current calls</button><button class="btn2" type="button" id="bdNew" data-bact="new" hidden>New batch</button></div>
+  </div>
+</dialog>
 
 <script>
 (function(){
@@ -1047,6 +1074,7 @@ function renderRail(){
   } else if(busy && st!=='idle'){
     h='<div class="lc real"><div class="lc-top"><span>'+esc(liveName||'Candidate')+'</span><span class="num">'+esc($('sLabel').textContent)+'</span></div><p>'+esc($('sSub').textContent)+'</p></div>';
   }
+  h+=batchRail();
   if(!h) h='<div class="lc idle"><div class="lc-top"><span>No calls right now</span></div><p>Start one from Calls. It shows up here live.</p><a class="lc-go" href="#calls">Start a call →</a></div>';
   $('liveCalls').innerHTML=h;
   var lv=document.querySelector('.oncall .live'); if(lv) lv.style.visibility=h.indexOf('lc real')>-1?'visible':'hidden';
@@ -1256,7 +1284,7 @@ function clearLive(){
 }
 
 function setStatus(label, sub, step, active){
-  try{ var on=!!active||step===2; var cl=document.getElementById("connLines"), cb=document.getElementById("connBar"); if(cl) cl.textContent=(on?1:0)+" of 2 call lines in use"; if(cb) cb.style.width=(on?50:0)+"%"; }catch(e){}
+  try{ singleOn=!!active||step===2; paintLines(); }catch(e){}
   $('sLabel').textContent=label; $('sSub').textContent=sub||'';
   var ds = step===5?'done' : step===3?'scoring' : step===2?'oncall' : active?'connecting' : label==='No call in progress'?'idle':'failed';
   $('statusBox').dataset.state = ds;
@@ -1517,6 +1545,148 @@ $('f-resume').addEventListener('change',function(){
     resumeMsg('<p class="err" style="margin:0">'+esc(netMsg(err,'Could not reach the resume service. Check the page is being served by the Pingo server.'))+'</p>');
   });
 });
+function jobExtras(){ var mh=(state.mh||[]).join('; '); var jd=(($('s-jd')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,1200); return {must_haves:mh, jd_summary:jd}; }
+/* ---------- batch calling ---------- */
+var singleOn=false, B={rows:[],running:false,stopped:false,tick:null};
+function bActive(){ if(!B) return []; return B.rows.filter(function(r){return r.st==='dial'||r.st==='ring'||r.st==='oncall'||r.st==='scoring';}); }
+function paintLines(){
+  var n=Math.min(2,(singleOn?1:0)+bActive().length), cl=document.getElementById('connLines'), cb=document.getElementById('connBar');
+  if(cl) cl.textContent=n+' of 2 call lines in use'; if(cb) cb.style.width=(n*50)+'%';
+}
+var BLABEL={queued:'Queued',dial:'Dialling',ring:'Ringing',oncall:'On call',scoring:'Scoring',skipped:'Not called'};
+function bChip(r){
+  if(r.st==='scored') return '<span class="chip ok">Scored · '+esc(r.pick)+' '+r.score+'</span>';
+  if(r.st==='ended') return '<span class="chip end">'+esc(r.msg)+'</span>';
+  if(r.st==='failed') return '<span class="chip bad" title="'+esc(r.msg)+'">Failed: '+esc(r.msg)+'</span>';
+  var run=r.st!=='queued'&&r.st!=='skipped';
+  return '<span class="chip'+(run?' run':'')+'">'+BLABEL[r.st]+(run&&r.t0?' · '+mmss((Date.now()-r.t0)/1000):'')+'</span>';
+}
+function batchRail(){
+  return bActive().map(function(r){
+    var el=r.t0?(Date.now()-r.t0)/1000:0;
+    return '<div class="lc real"><div class="lc-top"><span>'+esc(r.name)+'</span><span class="num">'+mmss(el)+'</span></div><p>'+BLABEL[r.st]+' · batch call</p><div class="bar"><i style="width:'+Math.min(100,el/6)+'%"></i></div></div>';
+  }).join('');
+}
+function parseCsv(text){
+  var rows=[],row=[],f='',q=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; }
+    else if(ch==='"' && !f.trim()) { f=''; q=true; }
+    else if(ch===','){ row.push(f); f=''; }
+    else if(ch==='\n'||ch==='\r'){ if(ch==='\r'&&text[i+1]==='\n') i++; row.push(f); rows.push(row); row=[]; f=''; }
+    else f+=ch;
+  }
+  row.push(f); rows.push(row);
+  return rows.map(function(r){return r.map(function(x){return x.trim();});}).filter(function(r){return r.some(Boolean);});
+}
+function normPhone(p){
+  p=String(p||'').replace(/[\s\-().]/g,'');
+  if(/^\d{10}$/.test(p)) p='+91'+p; else if(/^91\d{10}$/.test(p)) p='+'+p; else if(/^0\d{10}$/.test(p)) p='+91'+p.slice(1);
+  return /^\+91[6-9]\d{9}$/.test(p)?p:null;
+}
+function bParse(text){
+  var rows=parseCsv(text||''), ok=[], bad=[], seen={}, idx={name:0,phone:1,note:2,role:-1}, hdr=false;
+  if(rows.length){
+    var h=rows[0].map(function(x){return x.toLowerCase().replace(/[^a-z]/g,'');});
+    if(h.indexOf('name')>-1 && (h.indexOf('phone')>-1||h.indexOf('mobile')>-1)){
+      hdr=true; rows.shift();
+      idx={name:h.indexOf('name'),phone:h.indexOf('phone')>-1?h.indexOf('phone'):h.indexOf('mobile'),note:h.findIndex(function(x){return /resume|note/.test(x);}),role:h.indexOf('role')};
+    }
+  }
+  rows.forEach(function(r){
+    var name=r[idx.name]||'', phone=normPhone(r[idx.phone]);
+    var note=hdr?(idx.note>-1?r[idx.note]||'':''):r.slice(2).filter(Boolean).join(', ');
+    var role=idx.role>-1?r[idx.role]||'':'';
+    if(!name||!phone){ bad.push((name||'(no name)')+' · '+(r[idx.phone]||'no phone')+(name?' — not a valid Indian mobile':' — missing name')); return; }
+    if(seen[phone]){ bad.push(name+' · '+phone+' — duplicate number'); return; }
+    seen[phone]=1; ok.push({name:name.slice(0,80),phone:phone,note:note.slice(0,500),role:role.slice(0,80),st:'queued'});
+  });
+  return {ok:ok,bad:bad};
+}
+function bPaint(){
+  var n=B.rows.length, done=B.rows.filter(function(r){return /scored|ended|failed|skipped/.test(r.st);}).length, act=bActive().length;
+  var started=B.running||done>0;
+  $('bdInput').hidden=started; $('bdTblW').hidden=!n;
+  $('bdRows').innerHTML=B.rows.map(function(r){return '<tr><td>'+esc(r.name)+(r.cid?' <button class="linkbtn" type="button" data-open="'+r.cid+'">Open</button>':'')+'</td><td class="num">'+esc(r.phone)+'</td><td class="label">'+esc(r.note||'—')+'</td><td>'+bChip(r)+'</td></tr>';}).join('');
+  $('bdCount').textContent=n?(n+' applicant'+(n===1?'':'s')+' ready to call'+(B.rows[0]&&!B.rows[0].role?' · role: '+$('f-role').value.trim():'')):'No applicants yet.';
+  $('bdCount').hidden=started;
+  $('bdStart').hidden=started; $('bdStart').disabled=!n; $('bdStart').textContent='Call '+n+' candidate'+(n===1?'':'s');
+  $('bdProg').hidden=$('bdBarW').hidden=!started;
+  $('bdProg').textContent=done+' of '+n+' done · '+act+' on a call'+(B.stopped&&act?' · stopping':'');
+  $('bdBar').style.width=(n?done/n*100:0)+'%';
+  $('bdStop').hidden=!B.running||B.stopped; $('bdNew').hidden=B.running||!started;
+  paintLines(); renderRail();
+}
+function bSetRows(text){ var p=bParse(text); B.rows=p.ok; $('bdBad').hidden=!p.bad.length; $('bdBad').innerHTML=p.bad.length?'<b>'+p.bad.length+' skipped:</b> '+p.bad.map(esc).join(' · '):''; bPaint(); }
+function bOpen(focusStart){
+  var d=$('batchDlg'); if(!d.open){ if(d.showModal) d.showModal(); else d.setAttribute('open',''); }
+  bPaint();
+  setTimeout(function(){ (focusStart&&!$('bdStart').hidden&&!$('bdStart').disabled?$('bdStart'):(!$('bdInput').hidden?$('bdPaste'):$('bdStart'))).focus(); },0);
+}
+function bPump(){
+  if(!B.running) return;
+  var cap=2-(singleOn||busy?1:0);
+  while(!B.stopped && bActive().length<cap){
+    var r=B.rows.filter(function(x){return x.st==='queued';})[0]; if(!r) break;
+    bCall(r);
+  }
+  if(!bActive().length && (B.stopped || !B.rows.some(function(x){return x.st==='queued';}))){
+    B.rows.forEach(function(x){ if(x.st==='queued') x.st='skipped'; });
+    B.running=false; clearInterval(B.tick); B.tick=null;
+  }
+  bPaint();
+}
+function bEnd(r,st,msg){ r.st=st; r.msg=msg; bPump(); }
+function bCall(r){
+  r.st='dial'; r.t0=Date.now(); var pass=$('f-pass').value, x=jobExtras();
+  fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({passcode:pass,name:r.name,phone:r.phone,role:r.role||$('f-role').value.trim(),company:$('f-co').value.trim(),resume_note:r.note,must_haves:x.must_haves,jd_summary:x.jd_summary})})
+  .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(j.error||!j.execution_id) throw new Error(j.error||('Server replied '+res.status)); return j; }); })
+  .then(function(j){ r.id=j.execution_id; setTimeout(function(){bPoll(r,pass,0);},3000); })
+  .catch(function(err){ bEnd(r,'failed',netMsg(err,'Could not reach the calling service')); });
+}
+function bPoll(r,pass,fails){
+  if(Date.now()-r.t0>15*60*1000){ bEnd(r,'failed','No result after 15 minutes'); return; }
+  fetch('/api/status?id='+encodeURIComponent(r.id)+'&passcode='+encodeURIComponent(pass),{cache:'no-store'})
+  .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok) throw new Error(j.error||('Server replied '+res.status)); return j; }); })
+  .then(function(j){
+    var st=String(j.status||'').toLowerCase(), m=STATUS[st];
+    if(j.done && j.result){
+      try{ var c=addLive(r.name,j.result,false); saveLive(); render(); var s=scoreOf(c); r.cid=c.id; r.pick=s.pick; r.score=s.overall; r.st='scored'; bPump(); }
+      catch(e){ bEnd(r,'failed','Could not read the score'); }
+      return;
+    }
+    if(j.done){ bEnd(r, m&&m[2]<0?'ended':'ended', m&&m[2]<0?m[0]:'Ended, nothing to score'); if(m&&m[2]<0&&st!=='no-answer'&&st!=='busy'&&st!=='canceled') r.st='failed'; bPaint(); return; }
+    r.st = !m ? 'dial' : m[2]>=3 ? 'scoring' : m[2]===2 ? 'oncall' : m[2]===1 ? 'ring' : 'dial';
+    bPaint(); setTimeout(function(){bPoll(r,pass,0);},5000);
+  })
+  .catch(function(err){
+    if(fails>=4){ bEnd(r,'failed','Lost contact · '+netMsg(err,'network error')); return; }
+    setTimeout(function(){bPoll(r,pass,fails+1);},5000);
+  });
+}
+(function(){
+  var sample='name,phone,resume_note,role\n"Riya Sharma",+919876543210,"2 yrs inside sales at an edtech, B.Com",Sales Executive\nArjun Mehta,98450 12345,Fresher; MBA marketing; cold-calling internship,\n"Sana Khan",+91 99001 22334,"Retail store lead, 4 yrs, wants to move into SaaS",';
+  $('bdSample').href='data:text/csv;charset=utf-8,'+encodeURIComponent(sample);
+  $('bdPaste').addEventListener('input',function(){ bSetRows(this.value); });
+  $('bdFile').addEventListener('change',function(){
+    var f=this.files&&this.files[0]; if(!f) return;
+    f.text().then(function(t){ $('bdPaste').value=t.replace(/^﻿/,''); bSetRows($('bdPaste').value); })
+      .catch(function(){ $('bdBad').hidden=false; $('bdBad').textContent='Could not read that file. Save it as CSV and try again.'; });
+    this.value='';
+  });
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-batch]'); if(b){ bOpen(b.dataset.batch==='start'); return; }
+    var a=e.target.closest('[data-bact]'); if(!a) return;
+    var k=a.dataset.bact;
+    if(k==='close') $('batchDlg').close();
+    if(k==='start' && B.rows.length && !B.running){ B.running=true; B.stopped=false; B.tick=setInterval(bPaint,1000); bPump(); }
+    if(k==='stop'){ B.stopped=true; bPump(); }
+    if(k==='new' && !B.running){ B.rows=[]; $('bdPaste').value=''; $('bdBad').hidden=true; bPaint(); $('bdPaste').focus(); }
+  });
+  $('batchDlg').addEventListener('click',function(e){ if(e.target.closest('[data-open]')) this.close(); });
+})();
 $('s-jd').value=state.jd;
 loadPreset('balanced');
 loadLive();
@@ -1541,7 +1711,6 @@ window.hirefyDemo={setStatus:setStatus};
   });
 })();
 
-function jobExtras(){ var mh=(state.mh||[]).join('; '); var jd=(($('s-jd')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,1200); return {must_haves:mh, jd_summary:jd}; }
 function focusRow(id){
   try{ var q=document.querySelector('#view-dashboard input[type=search], input[aria-label="Search candidates"]'); if(q && q.value){ q.value=''; q.dispatchEvent(new Event('input',{bubbles:true})); } }catch(e){}
   location.hash='dashboard';
@@ -1552,6 +1721,7 @@ function focusRow(id){
     if(++tries<20) setTimeout(look,100);
   })();
 }
+
 </script>
 </body>
 </html>
