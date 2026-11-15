@@ -73,10 +73,20 @@
       "goal": "Split the architecture into independent pieces and build them in parallel with subagents.",
       "known": [
         "Hackathon demo shipped: https://demo-woad-two-21.vercel.app",
-        "Full build started with subagents. Stage 1: foundation (app, database with per-company security, logins, hosting).",
-        "Then in parallel: applicant upload + batch, AI reading and scoring, dashboard screens, call queue + callbacks; then security review."
+        "Real app built (M1-M8): Next.js on Vercel (pingo-app-nine.vercel.app), Supabase Mumbai with security on every table and per-role tests.",
+        "Built: CSV/paste import, ATS pre-filter with rescue lane, batch calling 2 at a time, JD upload, resume-vs-call mismatch flag, browser calls, truthful callback booking (max 2 reschedules), hidden fits, settings, demo seed.",
+        "Call queue runs every minute with a safety lock (only Indian mobiles, off unless switched on). Bolna results arrive through a secured webhook.",
+        "Product is Pingo; interviewer is Aditi. English + Hinglish now.",
+        "Measured Bolna cost: ~42 units for 7 min, ~12 for 1.5 min (likely US cents, so ~Rs 35 and ~Rs 10).",
+        "PRD (v5) and architecture docs updated to match what is built."
       ],
-      "open": []
+      "open": [
+        "M9: final security review and hardening pass, then rehearsal.",
+        "Raise Bolna's 2-line limit before promising fast batch times.",
+        "Check cost against the real Bolna invoice (units and currency).",
+        "Other Indian languages (Bolna supports kn, gu, ta, te, mr, bn, ml, pa, od, ur) are planned, not built.",
+        "Open product questions: TRAI number series, whether candidates see their score, who owns candidate data."
+      ]
     }
   ],
   "decisions": [

@@ -1,6 +1,6 @@
-# PRD: Voice AI that talks to every applicant
+# PRD: Pingo, the voice AI that talks to every applicant
 
-**Working name:** Hirefy (placeholder) · **Version:** 4 (final for build) · **Date:** 2026-11-15
+**Product name:** Pingo ("Every applicant gets heard"); the voice interviewer is **Aditi** · **Version:** 5 (updated to what is decided and built) · **Date:** 2026-11-16
 **Built from:** Shubh's raw thoughts (`raw-thoughts.md`) + Tushar's two PRDs (`prd-voice-ai-screening-bolna.md`, `prd-tushar-v2-hackathon-mvp.md`).
 **Order of authority:** Shubh's latest decisions (made after comparing both PRDs) override everything, including his own earlier raw thoughts and both of Tushar's PRDs. Tushar's PRDs have *not* been updated, so where they disagree with this document, this document wins. See section 0. Items marked *(proposal)* are suggested defaults that the team hasn't confirmed yet.
 
@@ -188,6 +188,26 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 - **Resume-only vs call score:** each candidate shows what the resume alone would have scored next to the call score, so "rescued" candidates stand out.
 - **Not in scope:** follow-up messages to candidates after the call.
 
+## 8c. Added since v4 (decided and built, 2026-11-16)
+
+**Pingo and Aditi.** The product is Pingo. The voice that calls candidates is Aditi. Wherever older text says "the AI" or a placeholder name, it means Aditi.
+
+**HR-controlled ATS pre-filter ("who gets a call").** The default is still **call everyone**. HR can switch it to "top N% by resume score" (10–100%). A rescue lane still calls anyone within 10 points of the cutoff. People the filter drops are **never called**; they stay in the list, greyed out, with the note "ATS would have dropped". This lets HR see exactly who a normal resume filter would have lost.
+
+**Batch calling.** HR uploads a CSV or pastes rows (name, phone, optional resume note and role). Numbers are cleaned up (+91 assumed) and duplicates removed. Calls go out **2 lines at a time**, with live progress per person and a **Stop** button. The queue runs on our servers, so it carries on if HR closes the tab.
+
+**JD upload.** HR can upload the job description (PDF, Word or text) instead of pasting it. It feeds Aditi's call and the scoring.
+
+**Resume vs call mismatch flag.** If what the candidate says on the call contradicts the resume, the candidate is flagged for HR review, with both sides shown.
+
+**Truthful callback booking.** If a candidate asks for another time, Aditi only says "I'll call you at X" **after** the booking has actually been made. A candidate can reschedule at most **2 times**. Booked callbacks show on the dashboard with the time.
+
+**Languages.** English and Hinglish now. Other Indian languages come later: Bolna supports Kannada, Gujarati, Tamil, Telugu, Marathi, Bengali, Malayalam, Punjabi, Odia and Urdu. The data model already allows a list of languages per job; the voice is not switched yet.
+
+**Browser calls.** HR or a candidate can also talk to Aditi in the browser (Bolna Web Call SDK), useful for demos and for people who don't want a phone call.
+
+**Measured cost.** Bolna reported about **42 for a 7-minute call and about 12 for a 1.5-minute call**. These are Bolna's own units, most likely US cents, so roughly **₹35 and ₹10**. This is lower than the ₹85 / ₹25 estimate in section 10, but it covers Bolna only and needs a re-check against the invoice.
+
 ## 9. Who does what: Bolna vs our system
 
 **Bolna does:** dials the phone; turns speech into text and back into a natural voice; runs the conversation from our instructions; handles turn-taking and interruptions; stops at our time limit; can ask our system mid-call (e.g. to book a reschedule); records the call; sends recording, transcript and call status to us when it ends.
@@ -320,7 +340,7 @@ Tracker: https://recruit-screening-tracker.vercel.app
 ## 16. Decisions made
 
 - Bolna for voice. Phone calls only.
-- Call everyone, with no resume filter in front.
+- Call everyone by default, with no resume filter in front (HR may opt in to a filter; see 8c).
 - Calls run up to 10 minutes; clearly weak candidates get a polite 2–3 minute exit.
 - Upfront opening; candidate can reschedule.
 - No "talk to a human" option. The AI answers honestly if asked whether it's an AI.
@@ -331,6 +351,14 @@ Tracker: https://recruit-screening-tracker.vercel.app
 - Failed must-have: short exit + capped at Maybe.
 - Rubric set per company, always including culture fit.
 - Picks are No / Maybe / Good / Amazing, plus extra flags.
+- Product is called Pingo; the interviewer is Aditi. *(2026-11-16)*
+- "Call everyone" stays the default, but HR can switch on an ATS pre-filter (top N% plus a rescue lane within 10 points). Filtered people are never called and show greyed with "ATS would have dropped".
+- Batch calling is in: CSV or paste, 2 lines at a time, live progress, stop.
+- JD upload is in. Resume-vs-call mismatch is flagged for HR.
+- Aditi confirms a callback time only after it is booked; max 2 reschedules.
+- English + Hinglish now; other Indian languages later.
+- Browser calls through the Bolna Web Call SDK are in.
+- Measured Bolna cost is lower than the estimate (~₹35 for 7 min, ~₹10 for 1.5 min); re-check against the invoice.
 
 ## 17. Open questions
 

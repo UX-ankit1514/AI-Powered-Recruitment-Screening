@@ -177,3 +177,13 @@ Each module is a self-contained task with a contract. Build order: M1 first, the
 3. Hinglish transcriber + voice options and reply latency on Indian numbers.
 4. Whether the agent can end the call itself on the short-exit goodbye.
 5. Raising concurrency above 2 for the hackathon.
+
+## 11. As built (2026-11-16)
+
+- **One Next.js app on Vercel** (pingo-app-nine.vercel.app) serves HR screens, the public apply page and all server routes.
+- **Supabase (Mumbai region)** holds the data, with row-level security on every table and per-role tests.
+- **Dispatcher:** a pg_cron job runs every minute and starts queued calls. It has a safety lock: nothing dials unless DISPATCH_ENABLED is on, and only Indian mobile numbers are ever dialled.
+- **Bolna webhook:** protected by a shared secret and an IP allowlist; events are handled once each, then scored.
+- **Two Bolna agents:** a separate app interviewer agent for the real app (id in /bolna/app-agent-id.txt, with callback-booking tools) and the older demo agent (/bolna/agent-id.txt).
+- **AI** goes through an OpenAI-compatible gateway (base URL, key and model set in env), with quotes checked word for word against the transcript.
+- **Still planned:** more Indian languages, raising Bolna's line limit above 2, real invoice check on cost, one-time code on the apply form, security hardening pass (M9), and ATS/spreadsheet export.
