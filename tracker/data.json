@@ -123,6 +123,11 @@
       "note": "The merged PRD the team builds from."
     },
     {
+      "label": "PRD gap review",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/prd-gap-review.md",
+      "note": "What's still missing in PRD v3: 9 decisions for Shubh, fixes, contradictions."
+    },
+    {
       "label": "Raw thoughts",
       "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/raw-thoughts.md",
       "note": "Shubh’s original brain-dump, tidied."
