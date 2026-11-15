@@ -12,25 +12,28 @@
       "goal": "Agree exactly what the product does, who uses it, and what the demo shows.",
       "known": [
         "Problem: resume screens drop ~900 of 1,000 applicants unheard; some are strong people with weak resumes.",
-        "Every applicant gets a warm 10–15 minute phone call from a Bolna voice AI. No resume filter in front.",
+        "Every applicant gets a warm phone call from a Bolna voice AI. No resume filter in front.",
+        "Call length: clearly weak candidates get a polite exit in 2–3 minutes; promising ones go up to 10 minutes max.",
         "Upfront opening about the job application; candidate can reschedule; no “talk to a human” option.",
         "AI politely cuts in on long answers or asks a follow-up; hard stop at 15 minutes.",
         "Scored on skills, experience, confidence and culture fit. Weights and extra traits set per company (experts vs learners vs curious types).",
         "Pick: No / Maybe / Good / Amazing, with evidence quotes. HR has the final say.",
         "Extra flags: fits another role, culture standout, wants an internship, needs a human look.",
-        "Cost: ~₹85 per 10-minute call (~₹83 Bolna + ₹1–2 scoring).",
+        "Cost: ~₹85 per full 10-minute call, ~₹25 per short exit.",
         "Different from HeyMilo / Hyring: we call everyone, spot other-role / culture / internship fit, and keep it a warm chat rather than a test.",
         "Team of four: Shubh, Ankit, Tushar, and one on market research.",
-        "PRD v2 written, merging raw thoughts with Tushar's PRD."
+        "PRD v3 written: raw thoughts + both of Tushar's PRDs."
       ],
       "open": [
-        "Tushar to agree to PRD v2 changes: call everyone, 10–15 min, no human option, culture fit, new pick labels.",
+        "Tushar to agree to PRD v3 changes: call everyone from any source, ≤10 min with short exit, no human option, culture fit + hidden-fit flags, new pick labels.",
+        "Which signals are allowed to end a call early? (Never accent, nerves or a weak resume.)",
         "What exactly is the canvas? Assumed: HR view of sorted candidates and their stories.",
         "If a candidate refuses recording, does the call end and they're marked “declined”?",
         "Confirm proposed rubric weights and pick cut-offs.",
         "Is the Bolna wallet balance in dollars or rupees?",
         "Can the Bolna AI interrupt mid-sentence, or only at pauses? Test first.",
-        "Team roles: who owns what?"
+        "Team roles: who owns what?",
+        "Bolna limit: our account allows 2 calls at a time; Tushar's PRD assumes 10."
       ]
     },
     {
@@ -96,6 +99,10 @@
     {
       "date": "2026-11-15",
       "text": "PRD v2 is the working spec; Tushar's PRD kept as reference."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Calls max 10 minutes; polite 2–3 minute exit for clearly weak candidates (replaces 10–15 minutes)."
     }
   ],
   "sources": [
@@ -118,6 +125,11 @@
       "label": "System PRD (Tushar)",
       "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/prd-voice-ai-screening-bolna.md",
       "note": "Full PRD: scoring rubric, compliance, stack, business case, 24-hour plan. Differs from raw thoughts on who gets called and how calls are judged."
+    },
+    {
+      "label": "Tushar's PRD v2 (hackathon MVP)",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/prd-tushar-v2-hackathon-mvp.md",
+      "note": "Second PRD: 5-part scoring, must-have gate, intake gateways, 5-min demo, competitors incl. Apna."
     },
     {
       "label": "Bolna docs",

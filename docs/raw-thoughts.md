@@ -11,7 +11,7 @@ The 900 who don't get picked might include good applicants with bad resumes. We'
 
 ## The idea
 
-Use **Bolna AI** to phone **every** applicant, not just the ones with good resumes. Each call is 10–15 minutes and warm, aimed at understanding who they are and hearing their story. Then the AI checks whether they fit the JD and the company.
+Use **Bolna AI** to phone **every** applicant, not just the ones with good resumes. Each call is warm (up to 10 minutes, shorter if they're clearly not a fit), aimed at understanding who they are and hearing their story. Then the AI checks whether they fit the JD and the company.
 
 Even someone who isn't right for this JD might have something that stands out:
 
@@ -23,7 +23,7 @@ Even someone who isn't right for this JD might have something that stands out:
 
 1. Someone applies for a job.
 2. We get ~1,000 applicants on whatever hiring platform we use.
-3. The AI phones each of them for a 10–15 minute call.
+3. The AI phones each of them: 2–3 minutes if they're clearly not a fit, up to 10 minutes if they're promising.
 4. On the call, the AI learns about them and judges whether they fit the JD and the company.
 5. Afterwards:
    - **Enrich the applicant record** with what we learned.
@@ -32,7 +32,9 @@ Even someone who isn't right for this JD might have something that stands out:
 ## The call
 
 - **Phone call only.** No Google Meet, no video. The call has to feel perfect.
-- **10–15 minutes.** Not shorter.
+- **Length depends on the candidate:**
+  - If a candidate is clearly weak, or can't hold a basic conversation, **end the call politely within 2–3 minutes.** No need to ask them everything.
+  - If a candidate seems good enough, keep going, but **10 minutes max.**
 - **Upfront opening:** *"Hi, this is regarding your job application for [role] at [company]. I'd love a 10-minute chat to understand more about you. Is now a good time?"*
 - **The candidate can reschedule** with the AI if now isn't a good time.
 - **No "talk to a human" option.** The candidate speaks with the AI only.
@@ -51,11 +53,11 @@ Even someone who isn't right for this JD might have something that stands out:
 
 ## Cost
 
-- Roughly **₹85 for a 10-minute call**. About ₹83 of that is Bolna credit (dialling, listening, talking, recording, transcript). The rest is our own AI scoring the transcript afterwards.
+- Roughly **₹85 for a full 10-minute call**, and about ₹20–25 for a 2–3 minute early-exit call. About ₹83 of that is Bolna credit (dialling, listening, talking, recording, transcript). The rest is our own AI scoring the transcript afterwards.
 
-## What makes us different (vs HeyMilo, Hyring)
+## What makes us different (vs HeyMilo, Hyring, Apna)
 
-- They screen resumes first, then interview the survivors. **We call everyone**, to rescue people with bad resumes.
+- HeyMilo and Hyring screen resumes first, then interview the survivors. **We call everyone**, to rescue people with bad resumes. (Apna's AI calling agent also calls applicants, so "call everyone" alone isn't unique. The next two points are.)
 - They only judge against the job applied for. **We also spot other-role fit, culture fit and internship interest.**
 - They lean into tests and anti-cheating. **Ours is a warm conversation.**
 
