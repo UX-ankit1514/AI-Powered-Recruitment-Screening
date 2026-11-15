@@ -9,20 +9,41 @@ export function safeEqual(given: string | null | undefined, expected: string | n
   return timingSafeEqual(a, b);
 }
 
-/** First hop of x-forwarded-for (set by Vercel), else x-real-ip. */
+/**
+ * Client IP. On Vercel, x-forwarded-for is set by the platform (any client-sent value is
+ * overwritten), so its first hop is the real caller. Behind a proxy that appends instead of
+ * overwriting, this would be spoofable: keep the secret check as the primary control.
+ */
 export function clientIp(req: Request): string | null {
   const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0]!.trim() || null;
-  return req.headers.get("x-real-ip")?.trim() || null;
+  const raw = xff ? xff.split(",")[0]!.trim() : req.headers.get("x-real-ip")?.trim();
+  if (!raw) return null;
+  return raw.replace(/^::ffff:/i, ""); // IPv4-mapped IPv6
 }
 
 /**
- * Best-effort source check for Bolna callbacks. Rejects only when a client IP is known and it
- * is not one of Bolna's published IPs. Set BOLNA_IP_CHECK=off to disable (e.g. if Bolna adds IPs).
+ * Allowed Bolna source IPs. Configure with BOLNA_IP_ALLOWLIST (comma-separated IPs); unset means
+ * Bolna's three published IPs (config.ts). BOLNA_IP_ALLOWLIST=off (or the older BOLNA_IP_CHECK=off)
+ * disables the check, e.g. while Bolna rolls out a new IP. Returns null when disabled.
+ */
+export function bolnaAllowlist(): string[] | null {
+  const raw = process.env.BOLNA_IP_ALLOWLIST?.trim();
+  if (process.env.BOLNA_IP_CHECK === "off" || raw?.toLowerCase() === "off") return null;
+  if (!raw) return BOLNA_IPS;
+  const list = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  return list.length ? list : BOLNA_IPS;
+}
+
+/**
+ * Source check for Bolna callbacks (webhook + reschedule function), on top of the secret.
+ * A caller IP outside the allowlist is rejected. When the IP is unknown: rejected on Vercel
+ * (the platform always sets it, so a missing IP means something is wrong), allowed elsewhere
+ * (local dev / tests have no proxy).
  */
 export function bolnaIpAllowed(req: Request): boolean {
-  if (process.env.BOLNA_IP_CHECK === "off") return true;
+  const list = bolnaAllowlist();
+  if (!list) return true;
   const ip = clientIp(req);
-  if (!ip) return true;
-  return BOLNA_IPS.includes(ip);
+  if (!ip) return !process.env.VERCEL;
+  return list.includes(ip);
 }

@@ -14,7 +14,9 @@ export async function sendMagicLink(_prev: LoginState, formData: FormData): Prom
   if (!parsed.success) return { status: "error", message: "Enter a valid work email." };
 
   const h = await headers();
-  const origin = process.env.APP_BASE_URL || `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
+  // Prefer configured origins over the Host header (Supabase also checks the redirect allowlist).
+  const prod = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "";
+  const origin = (process.env.APP_BASE_URL || prod || `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`).replace(/\/$/, "");
   const next = safeNext(parsed.data.next);
 
   const supabase = await createClient();

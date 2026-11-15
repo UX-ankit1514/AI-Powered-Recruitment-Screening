@@ -1,0 +1,357 @@
+/*
+ * Bias watch (Fairness page + compact alert card). Built on the tokens in app/globals.css.
+ * Charts: one series (group average, accent), flagged groups switch to the reserved red status
+ * colour and always carry a "Review" label + icon, so the signal is never colour-alone.
+ */
+
+.fw-lede {
+  margin-top: 6px;
+  max-width: 70ch;
+}
+.fw-jobpick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-3);
+}
+.fw-jobpick select {
+  width: auto;
+  padding: 6px 30px 6px 10px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* ---------- top row: alert + explainer ---------- */
+.fw-top {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+.fw-how {
+  padding: 20px 22px;
+}
+.fw-how h2 {
+  margin-bottom: 8px;
+}
+.fw-how p {
+  font-size: 13.5px;
+  color: var(--color-text-2);
+  max-width: 72ch;
+}
+.fw-how p + p {
+  margin-top: 8px;
+}
+.fw-how p.muted {
+  color: var(--color-text-3);
+}
+.fw-how b {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---------- compact alert card ---------- */
+.fw-alert {
+  padding: 18px 20px;
+}
+.fw-alert-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.fw-alert-head svg {
+  margin-top: 1px;
+}
+.fw-alert-warn .fw-alert-head svg {
+  color: var(--color-red);
+}
+.fw-alert-calm .fw-alert-head svg {
+  color: var(--color-accent);
+}
+.fw-alert-head h2 {
+  font-size: 16px;
+}
+.fw-alert-body {
+  margin: 8px 0 0 28px;
+  font-size: 13.5px;
+  color: var(--color-text-2);
+}
+.fw-alert-list {
+  list-style: none;
+  margin: 12px 0 0 28px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fw-alert-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 8px 0;
+  font-size: 13.5px;
+  border-top: 1px solid var(--color-line);
+}
+.fw-alert-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.fw-alert-group b {
+  font-weight: 600;
+}
+.fw-alert-num {
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+.fw-alert-num .num {
+  color: var(--color-red);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.fw-alert-foot {
+  margin: 12px 0 0 28px;
+  font-size: 12.5px;
+  color: var(--color-text-3);
+}
+.fw-alert-foot a {
+  color: var(--color-accent-ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.fw-alert-foot a:hover {
+  color: var(--color-accent);
+}
+
+/* ---------- whole-job strip ---------- */
+.fw-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 28px;
+  margin: 0 2px 16px;
+  font-size: 13px;
+  color: var(--color-text-2);
+}
+.fw-strip b {
+  margin-left: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---------- dimension cards ---------- */
+.fw-dims {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.fw-empty {
+  max-width: 640px;
+}
+.fw-dim-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px 16px;
+  padding: 20px 22px 0;
+}
+.fw-dim-head .hint {
+  margin: 4px 0 0;
+  max-width: 70ch;
+}
+.fw-chip-i {
+  width: 14px;
+  height: 14px;
+}
+.fw-key {
+  display: flex;
+  gap: 20px;
+  padding: 14px 22px 10px;
+  font-size: 12.5px;
+  color: var(--color-text-3);
+}
+.fw-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.fw-key-bar::before {
+  content: "";
+  width: 14px;
+  height: 8px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-accent);
+}
+.fw-key-tick::before {
+  content: "";
+  width: 2px;
+  height: 14px;
+  border-radius: 1px;
+  background: var(--color-text);
+}
+
+.fw-scroll {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.fw-table {
+  min-width: 780px;
+  table-layout: fixed;
+}
+/* same column widths in every card, so groups line up down the page */
+.fw-table thead th:nth-child(1) {
+  width: 19%;
+}
+.fw-table thead th:nth-child(2) {
+  width: 8%;
+}
+.fw-table thead th:nth-child(3) {
+  width: 31%;
+}
+.fw-table thead th:nth-child(4) {
+  width: 9%;
+}
+.fw-table thead th:nth-child(5) {
+  width: 12%;
+}
+.fw-table thead th:nth-child(6) {
+  width: 9%;
+}
+.fw-table thead th:nth-child(7) {
+  width: 12%;
+}
+.fw-table th,
+.fw-table td {
+  padding: 11px 10px;
+  font-size: 13.5px;
+  border-top: 1px solid var(--color-line);
+  text-align: left;
+  vertical-align: middle;
+}
+.fw-table thead th {
+  font: 600 11.5px var(--font-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+  white-space: nowrap;
+}
+.fw-table tbody th {
+  font-weight: 600;
+  color: var(--color-text);
+}
+.fw-table th:first-child,
+.fw-table td:first-child {
+  padding-left: 22px;
+}
+.fw-table th:last-child,
+.fw-table td:last-child {
+  padding-right: 22px;
+}
+.fw-table .r {
+  text-align: right;
+}
+.fw-table tbody tr {
+  transition: background 0.15s;
+}
+.fw-table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-sunken) 45%, transparent);
+}
+.fw-axis {
+  margin-left: 4px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: var(--color-text-3);
+}
+.fw-down {
+  color: var(--color-red);
+}
+
+/* bar cell: track 0–100, fill = group average, tick = job average */
+
+.fw-barwrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fw-bar {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  border-radius: 0 4px 4px 0;
+  background: var(--color-sunken);
+}
+.fw-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: var(--color-accent);
+}
+.fw-bar.s-flag i {
+  background: var(--color-red);
+}
+.fw-bar.s-watch i {
+  background: var(--color-peach);
+}
+.fw-bar.s-too_few i {
+  background: var(--color-accent-mid);
+  opacity: 0.55;
+}
+.fw-tick {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+.fw-val {
+  width: 3.4em;
+  text-align: right;
+  font-size: 13px;
+}
+/* hover tooltip on the bar (values are also in the row, so this is a convenience) */
+.fw-bar::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  z-index: 2;
+  width: max-content;
+  max-width: 300px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-side);
+  color: var(--color-side-text);
+  font-size: 12.5px;
+  line-height: 1.4;
+  box-shadow: 0 4px 14px rgb(25 23 36 / 0.18);
+  opacity: 0;
+  transform: translateY(3px);
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fw-bar:hover::after {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 1000px) {
+  .fw-top {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-bar::after,
+  .fw-table tbody tr {
+    transition: none;
+  }
+}

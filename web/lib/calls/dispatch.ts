@@ -13,13 +13,14 @@ import { safeEqual } from "./secret";
 import { BolnaError, startPhoneCall } from "./bolna";
 import { buildUserData, loadCallContext } from "./context";
 import { endChainWithoutScore, finishCall, setCandidateStatus, untyped, type DB } from "./lifecycle";
-import { reapStaleCalls } from "./webhook";
+import { reapStaleCalls, retryPendingScores } from "./webhook";
+import { flushRetentionFiles } from "../retention/files";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const Body = z.object({ job_id: z.string().regex(UUID).optional() }).catch({});
 
 type Claimed = { call_id: string; job_id: string; company_id: string; candidate_id: string; attempt: number };
-export type DispatchResult = { started: number; blocked: number; failed: number; in_flight: number; reaped: number };
+export type DispatchResult = { started: number; blocked: number; failed: number; in_flight: number; reaped: number; rescored: number };
 
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
@@ -38,7 +39,7 @@ export async function handleDispatch(req: Request): Promise<Response> {
 
 export async function runDispatch(opts: { jobId?: string; limit?: number; db?: DB } = {}): Promise<DispatchResult> {
   const db = opts.db ?? createAdminClient();
-  const result: DispatchResult = { started: 0, blocked: 0, failed: 0, in_flight: 0, reaped: 0 };
+  const result: DispatchResult = { started: 0, blocked: 0, failed: 0, in_flight: 0, reaped: 0, rescored: 0 };
 
   if (bolnaKey()) result.reaped = await reapStaleCalls(db, opts.jobId).catch(() => 0);
 
@@ -48,6 +49,12 @@ export async function runDispatch(opts: { jobId?: string; limit?: number; db?: D
 
   const outcomes = await Promise.all(claimed.map((c) => dialOne(db, c).catch(() => "failed" as const)));
   for (const o of outcomes) result[o]++;
+
+  // Scoring that failed after a completed call is retried by the every-minute cron run (no job
+  // filter), one call per run so the run stays well inside maxDuration. Backoff + max 3 attempts.
+  if (!opts.jobId) result.rescored = await retryPendingScores(db, 1).catch(() => 0);
+  // Storage files queued by the nightly retention purge are deleted here (server holds the key).
+  if (!opts.jobId) await flushRetentionFiles(untyped(db)).catch(() => 0);
 
   let q = db.from("calls").select("id", { count: "exact", head: true }).in("state", ["dialing", "in_call"]).eq("call_kind", "phone");
   if (opts.jobId) q = q.eq("job_id", opts.jobId);

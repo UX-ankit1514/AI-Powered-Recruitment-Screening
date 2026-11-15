@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Paths reachable without a session. Everything else (the dashboard) requires sign-in. */
-const PUBLIC_PREFIXES = ["/login", "/auth", "/apply", "/api"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/apply", "/pick-time", "/api"]; // /pick-time: signed-link page for candidates (messaging)
 
 export function isPublicPath(pathname: string) {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

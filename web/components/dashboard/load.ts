@@ -4,6 +4,7 @@ import type { Membership } from "@/components/server/session";
 import { readFlags, isHiddenFit, sourceLabel, type CallSummary } from "@/components/candidate-format";
 import { CustomTraitSchema, MustHaveSchema, WeightsSchema, type CustomTrait, type CallOutcome, type CallState } from "@/lib/types";
 import { z } from "zod";
+import { fxInrPerUsd } from "@/lib/cost";
 
 export type DashCandidate = {
   id: string;
@@ -33,7 +34,10 @@ export type DashboardData = {
     completed: number;
     shortExits: number;
     hiddenFits: { total: number; otherRole: number; culture: number; internship: number; mismatch: number; hrReview: number };
-    spend: number;
+    /** Bolna call cost, summed. Bolna reports total_cost in USD cents. */
+    spendCents: number;
+    /** INR per USD used to show a derived rupee figure (env COST_FX_INR_PER_USD, default 88). */
+    fxInrPerUsd: number;
     pipeline: { queued: number; retrying: number; onCall: number };
   };
   live: LiveCall[];
@@ -83,7 +87,7 @@ export async function loadDashboard(me: Membership, jobs: JobPick[], requestedJo
 
   // latest call per candidate (rows ordered oldest → newest, so the last write wins)
   const latestCall = new Map<string, CallSummary>();
-  let spend = 0;
+  let spendCents = 0;
   const liveIds: { id: string; candidateId: string; state: CallState; startedAt: string | null }[] = [];
   for (const c of callsRes.data ?? []) {
     latestCall.set(c.candidate_id, {
@@ -92,7 +96,8 @@ export async function loadDashboard(me: Membership, jobs: JobPick[], requestedJo
       durationS: c.duration_s,
       attempt: c.attempt,
     });
-    if (typeof c.cost === "number") spend += c.cost;
+    const cents = Number(c.cost);
+    if (c.cost !== null && Number.isFinite(cents)) spendCents += cents;
     if (c.state === "dialing" || c.state === "in_call") {
       liveIds.push({ id: c.id, candidateId: c.candidate_id, state: c.state, startedAt: c.started_at });
     }
@@ -176,7 +181,8 @@ export async function loadDashboard(me: Membership, jobs: JobPick[], requestedJo
       completed,
       shortExits,
       hiddenFits: hf,
-      spend,
+      spendCents,
+      fxInrPerUsd: fxInrPerUsd(),
       pipeline,
     },
     live,

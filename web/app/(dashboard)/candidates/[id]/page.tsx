@@ -8,6 +8,7 @@ import { loadProfile } from "@/components/results/server/data";
 import { roleIn } from "@/components/results/server/auth";
 import { ProfileView } from "@/components/results/profile-view";
 import { PageSkeleton } from "@/components/results/page-bits";
+import { EraseCandidate } from "@/components/results/erase-candidate";
 
 export const metadata = { title: "Candidate · Pingo" };
 
@@ -29,5 +30,5 @@ async function Content({ params }: { params: PageProps<"/candidates/[id]">["para
   if (!p) notFound();
   const role = await roleIn(db, me.userId, p.candidate.company_id);
   if (!role) notFound();
-  return <ProfileView key={p.candidate.id} p={p} canEdit={canEdit(role)} meIsHm={role === "hiring_manager"} />;
+  return <><ProfileView key={p.candidate.id} p={p} canEdit={canEdit(role)} meIsHm={role === "hiring_manager"} />{role === "admin" ? <EraseCandidate candidateId={p.candidate.id} name={p.candidate.name} /> : null}</>;
 }

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Suspense } from "react";
 import { getPublicJob } from "@/lib/ingest/public-job";
+import { otpMode } from "@/lib/messaging/provider";
 import { ApplyForm } from "./apply-form";
 
 export const metadata = { title: "Apply · Pingo", robots: { index: false } };
@@ -43,7 +44,7 @@ async function ApplyBody({ params }: { params: PageProps<"/apply/[jobId]">["para
       <p className="mt-1 mb-6 text-text-2">
         {job.company} · Apply in a minute. You will get a short phone interview, so every application gets a real conversation.
       </p>
-      <ApplyForm jobId={job.id} company={job.company} />
+      <ApplyForm jobId={job.id} company={job.company} verification={otpMode()} />
     </div>
   );
 }

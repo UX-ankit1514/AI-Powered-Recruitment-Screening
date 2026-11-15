@@ -40,9 +40,7 @@ export function formatInt(n: number) {
   return n.toLocaleString("en-IN");
 }
 
-export function formatRupees(n: number) {
-  return `₹${Math.round(n).toLocaleString("en-IN")}`;
-}
+export { formatCallCost, formatUsdFromCents, formatInrFromCents } from "@/lib/cost";
 
 /** Tolerant reader for the scores.flags JSON (written by the scorer; shape may grow). */
 export type Flags = {

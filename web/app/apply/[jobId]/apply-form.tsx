@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { PhoneVerify } from "@/lib/messaging/phone-verify";
 
 // Resume text is read in the browser (same readers as /demo), so the server stays dependency-free.
 const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
@@ -63,7 +64,7 @@ const inputCls =
   "h-11 w-full rounded-[10px] border border-line-strong bg-surface px-3.5 text-[15px] outline-none transition-colors placeholder:text-text-3 focus:border-accent";
 const labelCls = "mb-1.5 block text-[13px] font-medium text-text-2";
 
-export function ApplyForm({ jobId, company }: { jobId: string; company: string }) {
+export function ApplyForm({ jobId, company, verification = "off" }: { jobId: string; company: string; verification?: "on" | "dev" | "off" }) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [fileNote, setFileNote] = useState("");
   const resumeText = useRef("");
@@ -124,20 +125,8 @@ export function ApplyForm({ jobId, company }: { jobId: string; company: string }
         <input id="ap-name" name="name" required maxLength={120} autoComplete="name" className={inputCls} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="ap-phone" className={labelCls}>Mobile number</label>
-          <input
-            id="ap-phone"
-            name="phone"
-            type="tel"
-            required
-            maxLength={40}
-            autoComplete="tel"
-            inputMode="tel"
-            placeholder="+91 98765 43210"
-            className={`${inputCls} num text-[14px]`}
-          />
-        </div>
+        {/* Messaging: phone field with 6-digit code verification (adds the phone_token field). */}
+        <PhoneVerify jobId={jobId} mode={verification} inputCls={inputCls} labelCls={labelCls} />
         <div>
           <label htmlFor="ap-email" className={labelCls}>Email <span className="font-normal text-text-3">(optional)</span></label>
           <input id="ap-email" name="email" type="email" maxLength={320} autoComplete="email" className={inputCls} />

@@ -9,6 +9,8 @@
  *   POST /api/calls/web-session?candidate_id=<uuid>   body: { candidate_id }
  */
 export const BOLNA_WEB_SDK = "https://cdn.jsdelivr.net/gh/bolna-ai/web-call@v3.0.1/dist/bolna-web-call.min.js";
+/** Subresource integrity for the pinned SDK build: the browser refuses the script if the CDN serves anything else. */
+export const BOLNA_WEB_SDK_SRI = "sha384-eIwZYmjK+HzlUdEuzvTa1rYdY23/D0fy+vJe8XlqhzxXELVUw9bCEhdOfcMQlIvq";
 
 type Handler = (arg: unknown) => void;
 export type BolnaWebCallInstance = {
@@ -41,6 +43,7 @@ function loadSdk(): Promise<Ctor> {
     loading = new Promise<Ctor>((ok, bad) => {
       const s = document.createElement("script");
       s.src = BOLNA_WEB_SDK;
+      s.integrity = BOLNA_WEB_SDK_SRI;
       s.async = true;
       s.crossOrigin = "anonymous";
       s.onload = () => (w.BolnaWebCall ? ok(w.BolnaWebCall) : bad(new Error("The in-browser call did not load. Try a phone call instead.")));

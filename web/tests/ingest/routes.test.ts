@@ -44,7 +44,9 @@ let closedJobId = "";
 const ips: string[] = [];
 const batchIds: string[] = [];
 
-const testPhone = () => `+1555010${String(randomInt(0, 9999)).padStart(4, "0")}`;
+// Unique within a run (a random base + counter), so a job never gets two equal test phones.
+let phoneSeq = randomInt(0, 9000);
+const testPhone = () => `+1555010${String(phoneSeq++ % 10_000).padStart(4, "0")}`;
 const as = (c: DB) => {
   h.client = c;
 };

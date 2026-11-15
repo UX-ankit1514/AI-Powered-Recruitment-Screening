@@ -72,6 +72,24 @@ export type Database = {
           },
         ]
       }
+      apply_rate_limits: {
+        Row: {
+          at: string
+          id: number
+          ip_hash: string
+        }
+        Insert: {
+          at?: string
+          id?: number
+          ip_hash: string
+        }
+        Update: {
+          at?: string
+          id?: number
+          ip_hash?: string
+        }
+        Relationships: []
+      }
       batches: {
         Row: {
           company_id: string
@@ -140,6 +158,10 @@ export type Database = {
           recording_url: string | null
           reschedule_count: number
           scheduled: boolean
+          score_attempts: number
+          score_error: string | null
+          score_next_at: string | null
+          score_status: string | null
           started_at: string | null
           state: Database["public"]["Enums"]["call_state"]
           termination_reason: string | null
@@ -164,6 +186,10 @@ export type Database = {
           recording_url?: string | null
           reschedule_count?: number
           scheduled?: boolean
+          score_attempts?: number
+          score_error?: string | null
+          score_next_at?: string | null
+          score_status?: string | null
           started_at?: string | null
           state?: Database["public"]["Enums"]["call_state"]
           termination_reason?: string | null
@@ -188,6 +214,10 @@ export type Database = {
           recording_url?: string | null
           reschedule_count?: number
           scheduled?: boolean
+          score_attempts?: number
+          score_error?: string | null
+          score_next_at?: string | null
+          score_status?: string | null
           started_at?: string | null
           state?: Database["public"]["Enums"]["call_state"]
           termination_reason?: string | null
@@ -619,7 +649,52 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      bump_batch_done: { Args: { p_batch_id: string }; Returns: undefined }
+      claim_due_calls: {
+        Args: { p_job_id?: string; p_limit?: number }
+        Returns: {
+          attempt: number
+          call_id: string
+          candidate_id: string
+          company_id: string
+          job_id: string
+        }[]
+      }
+      claim_score_retries: {
+        Args: { p_job_id?: string; p_limit?: number; p_max_attempts?: number }
+        Returns: {
+          attempt: number
+          call_id: string
+        }[]
+      }
+      save_rubric_version: {
+        Args: {
+          p_custom_traits: Json
+          p_job_id: string
+          p_must_haves: Json
+          p_nice_to_haves: Json
+          p_weights: Json
+        }
+        Returns: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          custom_traits: Json
+          id: string
+          is_current: boolean
+          job_id: string
+          must_haves: Json
+          nice_to_haves: Json
+          version: number
+          weights: Json
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "rubrics"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       action_type:

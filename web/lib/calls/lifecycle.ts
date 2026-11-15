@@ -11,7 +11,7 @@ export type CallRow = Database["public"]["Tables"]["calls"]["Row"];
 export const untyped = (db: DB) => db as unknown as SupabaseClient;
 
 export const CALL_COLS =
-  "id, candidate_id, job_id, company_id, batch_id, attempt, due_at, state, outcome, bolna_execution_id, started_at, duration_s, recording_url, transcript, cost, termination_reason, reschedule_count, locked_at, callback_at, scheduled, call_kind, created_at";
+  "id, candidate_id, job_id, company_id, batch_id, attempt, due_at, state, outcome, bolna_execution_id, started_at, duration_s, recording_url, transcript, cost, termination_reason, reschedule_count, locked_at, callback_at, scheduled, call_kind, created_at, score_status, score_attempts, score_next_at, score_error";
 
 /** Moves a candidate's status, never touching shortlisted / rejected (a human decided). */
 export async function setCandidateStatus(db: DB, candidateId: string, status: string, onlyFrom?: string[]) {

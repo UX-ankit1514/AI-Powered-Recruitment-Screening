@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { callingStatus, loadSettings } from "@/components/results/server/data";
 import { teammateEmails } from "@/components/results/server/team";
 import { EmptyPage, PageSkeleton } from "@/components/results/page-bits";
+import { MessagingSection } from "@/components/settings/messaging-section";
+import { RetentionSettings } from "@/components/settings/retention";
 
 export const metadata = { title: "Settings · Pingo" };
 
@@ -117,6 +119,7 @@ async function Content() {
           </table>
         </section>
 
+        <RetentionSettings />
         <section className="card full" aria-labelledby="s-jobs">
           <div className="s-head">
             <h2 id="s-jobs">Lines and calling hours per job</h2>
@@ -162,6 +165,7 @@ async function Content() {
             </p>
           )}
         </section>
+        <MessagingSection />
       </div>
     </>
   );

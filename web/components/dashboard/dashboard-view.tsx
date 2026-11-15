@@ -9,7 +9,7 @@ import {
   callText,
   computeOverall,
   formatInt,
-  formatRupees,
+  formatCallCost,
   hasFailedMustHave,
   initials,
   isHiddenFit,
@@ -111,7 +111,9 @@ export function DashboardView({ data, canEdit }: { data: DashboardData; canEdit:
   });
 
   const completedPct = kpi.applicants ? Math.round((kpi.completed / kpi.applicants) * 100) : 0;
-  const perCall = kpi.completed ? kpi.spend / kpi.completed : 0;
+  const perCallCents = kpi.completed ? kpi.spendCents / kpi.completed : 0;
+  const spend = formatCallCost(kpi.spendCents, kpi.fxInrPerUsd);
+  const perCall = formatCallCost(perCallCents, kpi.fxInrPerUsd);
   const langs = job.languages.map((l) => LANG_LABEL[l] ?? l).join(" + ");
   const setupHref = `/jobs/${job.id}/setup`;
 
@@ -184,8 +186,10 @@ export function DashboardView({ data, canEdit }: { data: DashboardData; canEdit:
         </div>
         <div className="card kpi">
           <div className="label">Spend so far</div>
-          <div className="big">{formatRupees(kpi.spend)}</div>
-          <p>{kpi.completed ? `~${formatRupees(perCall)} per completed call` : "Nothing spent yet"}</p>
+          <div className="big">{spend.usd}</div>
+          <p title={`Bolna bills in US dollars. Rupees shown at ₹${kpi.fxInrPerUsd} per $1.`}>
+            {kpi.completed ? `≈ ${spend.inr} · ~${perCall.usd} (≈ ${perCall.inr}) per completed call` : "Nothing spent yet"}
+          </p>
         </div>
       </div>
 

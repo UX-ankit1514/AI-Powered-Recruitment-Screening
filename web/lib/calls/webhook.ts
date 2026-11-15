@@ -123,16 +123,83 @@ export async function processExecution(db: DB, exec: BolnaExecution, opts: { kic
     return { handled: true, outcome: cls.outcome };
   }
 
-  const result = await scoreAndStore(db, finished.row, exec);
-  await kick();
-  return { handled: true, ...result };
+  // First scoring attempt happens here; a failure is retried by the dispatcher (retryPendingScores).
+  const { data: claimed } = await db
+    .from("calls")
+    .update({ score_status: "scoring", score_attempts: 1, score_next_at: new Date().toISOString(), score_error: null })
+    .eq("id", finished.row.id)
+    .select(CALL_COLS)
+    .maybeSingle();
+  const row = claimed ?? finished.row;
+  const callTime = exec.initiated_at ?? exec.created_at ?? row.started_at ?? row.created_at;
+  try {
+    const result = await scoreAndStore(db, row, callTime);
+    await kick();
+    return { handled: true, ...result };
+  } catch (e) {
+    await markScoreFailed(db, row, e);
+    await kick();
+    return { handled: true, outcome: row.outcome ?? cls.outcome, scored: false };
+  }
 }
 
-async function scoreAndStore(db: DB, row: CallRow, exec: BolnaExecution): Promise<{ outcome: string; scored: boolean; rescheduled: boolean }> {
+/** Retry schedule after attempt n fails: 2 min, then 10 min. Attempt MAX_SCORE_ATTEMPTS gives up. */
+export const MAX_SCORE_ATTEMPTS = 3;
+const SCORE_BACKOFF_MIN = [2, 10];
+
+async function markScoreFailed(db: DB, row: CallRow, e: unknown) {
+  const attempts = Math.max(1, row.score_attempts ?? 1);
+  const err = (e instanceof Error ? e.message : "unknown error").slice(0, 300);
+  if (attempts >= MAX_SCORE_ATTEMPTS) {
+    await db.from("calls").update({ score_status: "gave_up", score_error: err, score_next_at: null }).eq("id", row.id);
+    await endChainWithoutScore(db, row);
+    return;
+  }
+  const delay = SCORE_BACKOFF_MIN[Math.min(attempts - 1, SCORE_BACKOFF_MIN.length - 1)];
+  await db
+    .from("calls")
+    .update({ score_status: "failed", score_error: err, score_next_at: new Date(Date.now() + delay * 60_000).toISOString() })
+    .eq("id", row.id);
+}
+
+/**
+ * Re-runs scoring for completed calls whose scoring failed or got stuck (claimed in SQL with
+ * skip-locked, so parallel dispatchers never double-score). Called by the every-minute dispatcher.
+ */
+export async function retryPendingScores(db: DB, max = 3, jobId?: string): Promise<number> {
+  const { data, error } = await db.rpc("claim_score_retries", {
+    p_limit: max,
+    p_max_attempts: MAX_SCORE_ATTEMPTS,
+    ...(jobId ? { p_job_id: jobId } : {}),
+  });
+  if (error) return 0;
+  let n = 0;
+  for (const c of data ?? []) {
+    const { data: row } = await db.from("calls").select(CALL_COLS).eq("id", c.call_id).maybeSingle();
+    if (!row) continue;
+    try {
+      await scoreAndStore(db, row, row.started_at ?? row.created_at);
+      n++;
+    } catch (e) {
+      await markScoreFailed(db, row, e);
+    }
+  }
+  return n;
+}
+
+async function scoreAndStore(db: DB, row: CallRow, callTime: string): Promise<{ outcome: string; scored: boolean; rescheduled: boolean }> {
   const ctx = await loadCallContext(db, row.candidate_id);
   if (!ctx || !row.transcript) {
+    await db.from("calls").update({ score_status: "gave_up", score_error: "no transcript or candidate context" }).eq("id", row.id);
     await endChainWithoutScore(db, row);
     return { outcome: row.outcome ?? "completed", scored: false, rescheduled: false };
+  }
+  // Idempotent: a retry after a late failure must not store a second score for the same call.
+  const { count: already } = await db.from("scores").select("id", { count: "exact", head: true }).eq("call_id", row.id);
+  if (already) {
+    await db.from("calls").update({ score_status: "done", score_error: null, score_next_at: null }).eq("id", row.id);
+    await setCandidateStatus(db, row.candidate_id, "scored");
+    return { outcome: row.outcome ?? "completed", scored: true, rescheduled: false };
   }
   const score = await scoreCall({
     transcript: row.transcript,
@@ -143,7 +210,7 @@ async function scoreAndStore(db: DB, row: CallRow, exec: BolnaExecution): Promis
     resumeNote: resumeNoteOf(ctx),
     customTraits: customTraitsOf(ctx),
     candidateName: ctx.candidate.name,
-    callTime: exec.initiated_at ?? exec.created_at ?? row.started_at ?? row.created_at,
+    callTime,
   });
 
   const { error } = await db.from("scores").insert({
@@ -161,6 +228,7 @@ async function scoreAndStore(db: DB, row: CallRow, exec: BolnaExecution): Promis
     prompt_version: score.prompt_version,
   });
   if (error) throw new Error("could not store score");
+  await db.from("calls").update({ score_status: "done", score_error: null, score_next_at: null }).eq("id", row.id);
 
   let outcome = row.outcome ?? "completed";
   if (score.short_exit && outcome === "completed") {
