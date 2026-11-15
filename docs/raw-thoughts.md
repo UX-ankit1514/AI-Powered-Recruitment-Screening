@@ -31,8 +31,14 @@ Even someone who isn't right for this JD might have something in their story tha
 
 ## The interface
 
-- Can be very basic. It could be like a scheduled Google Meet the voice AI joins, but **no video is needed**. It's just the voice AI talking with the candidate for 10–15 minutes.
+- **A phone call, not a Google Meet.** No video. Just the voice AI talking with the candidate for 10–15 minutes, and **the phone call has to feel perfect**.
+- The **candidate can reschedule** the call with the Bolna agent if now isn't a good time.
+- Alongside the call, we can also have a **canvas** (a visual view of the candidates and results; details still to be worked out).
 - The tone should be **warm and conversational**, not a prickly HR interview. We want to actually talk to the candidate, not sit in judgement.
+
+## Opening the call: be upfront
+
+The AI should say right away what the call is about, for example: *"Hi, this is regarding your job application for [role] at [company]. I'd love a quick 10-minute chat to understand more about you. Is now a good time?"* If it isn't, offer to reschedule.
 
 ## Guardrails
 
@@ -46,6 +52,7 @@ Even someone who isn't right for this JD might have something in their story tha
 
 ## Open questions (from the first discussion)
 
-- **Phone call or browser call?** Bolna calls phones, or the candidate can talk to it in a browser tab. Getting a bot to join Google Meet would be separate and much harder.
+- ~~Phone call or browser call?~~ **Decided: phone call.** No Google Meet.
+- **What is the canvas exactly?** Recruiter dashboard, per-candidate story board, or something else?
 - **Hackathon demo:** what should the judges see live? A phone ringing and a real conversation, or mainly a dashboard of verdicts?
 - **Consent:** candidates should know they're talking to an AI and agree to the call.
