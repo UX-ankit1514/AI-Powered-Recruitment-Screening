@@ -1,9 +1,9 @@
 {
-  "project": "AI recruitment screening",
-  "workingName": "Hirefy (placeholder)",
+  "project": "Pingo",
+  "workingName": "Pingo",
   "oneLiner": "A warm 10–15 minute AI phone call with every applicant, not just the top 50 — so good people with bad resumes stop getting filtered out.",
   "updated": "2026-11-15",
-  "currentStage": 3,
+  "currentStage": 4,
   "stages": [
     {
       "id": 1,
@@ -52,7 +52,7 @@
     {
       "id": 3,
       "name": "System architecture + SLD",
-      "status": "in-progress",
+      "status": "done",
       "goal": "Design the whole system and draw the system-level diagram. Built with Fable.",
       "known": [
         "Architecture v1 written: one Next.js app on Vercel, Supabase (data, login, files, live updates), Claude for reading resumes and scoring, Bolna for the call.",
@@ -69,9 +69,13 @@
     {
       "id": 4,
       "name": "Build with subagents",
-      "status": "not-started",
+      "status": "in-progress",
       "goal": "Split the architecture into independent pieces and build them in parallel with subagents.",
-      "known": [],
+      "known": [
+        "Hackathon demo shipped: https://demo-woad-two-21.vercel.app",
+        "Full build started with subagents. Stage 1: foundation (app, database with per-company security, logins, hosting).",
+        "Then in parallel: applicant upload + batch, AI reading and scoring, dashboard screens, call queue + callbacks; then security review."
+      ],
       "open": []
     }
   ],
@@ -123,6 +127,10 @@
     {
       "date": "2026-11-15",
       "text": "One standard rubric per job, edited by the company. English + Hinglish only. Talent pool in; candidate follow-ups out. Credits unlimited."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Renamed to Pingo; interviewer is Aditi. Full build on a new 'pingo' database (paused jensens-worst-week to free the slot)."
     }
   ],
   "sources": [
