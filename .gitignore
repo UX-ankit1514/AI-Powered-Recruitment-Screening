@@ -4,3 +4,9 @@
 !.env.example
 node_modules/
 .DS_Store
+
+# app
+web/.env*
+!web/.env.example
+.next/
+*.tsbuildinfo
