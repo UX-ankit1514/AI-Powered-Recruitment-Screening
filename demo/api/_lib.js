@@ -18,7 +18,7 @@ Rules:
 - Detect whether the call ended early because the candidate could not hold a basic conversation or clearly failed a must-have (short_exit).
 - Must-haves: "2+ years of sales experience" and "comfortable speaking English". Mark met as true, false, or null if unknown.
 
-Return ONLY JSON, with no other text, matching exactly this shape:
+If the call was ended by the interviewer because of abuse, inappropriate behaviour or repeatedly refusing to stay on topic, set short_exit to true and start the summary with "Call ended for conduct:" plus one neutral line. Repeated drifting off topic lowers confidence and culture_fit only if clearly evidenced. CONDUCT handling is factual, never moralising. Return ONLY JSON, with no other text, matching exactly this shape:
 {"qualities":{"skills":{"score":1,"reason":"","quotes":[""]},"experience":{"score":1,"reason":"","quotes":[""]},"confidence":{"score":1,"reason":"","quotes":[""]},"culture_fit":{"score":1,"reason":"","quotes":[""]},"curiosity":{"score":1,"reason":"","quotes":[""]},"learning_drive":{"score":1,"reason":"","quotes":[""]},"storytelling":{"score":1,"reason":"","quotes":[""]}},"must_have_results":[{"text":"2+ years of sales experience","met":null},{"text":"comfortable speaking English","met":null}],"flags":{"other_role":null,"culture_standout":false,"wants_internship":false,"resume_mismatch":[]},"summary":"","short_exit":false}
 
 Notes on fields: "score" is an integer 1-5 or null. "other_role" is a role name (for example "Customer Success Associate") if the candidate would fit another role better, otherwise null. "resume_mismatch" is a list of short strings describing anything said on the call that contradicts the resume note, or an empty list. "summary" is at most 50 words.`;
