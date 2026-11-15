@@ -1,0 +1,119 @@
+{
+  "project": "AI recruitment screening",
+  "workingName": "Hirefy (placeholder)",
+  "oneLiner": "A warm 10–15 minute AI phone call with every applicant, not just the top 50 — so good people with bad resumes stop getting filtered out.",
+  "updated": "2026-11-15",
+  "currentStage": 1,
+  "stages": [
+    {
+      "id": 1,
+      "name": "Define what we're building",
+      "status": "in-progress",
+      "goal": "Agree exactly what the product does, who uses it, and what the demo shows.",
+      "known": [
+        "Problem: resume screens cut ~900 of 1,000 applicants; some are strong people with weak resumes.",
+        "Every applicant gets a 10–15 minute voice call from an AI built on Bolna.",
+        "Flow: apply → land on hiring platform → AI calls → AI judges fit to JD and company → enrich applicant record + give a verdict.",
+        "Verdict scale: No / Maybe / Good / Amazing.",
+        "Also capture: fit for another role, general culture fit, looking for an internship.",
+        "Phone call only. No Google Meet, no video. The call has to feel perfect.",
+        "Opens upfront: “This is about your job application for [role] — can we do a 10-minute chat?”",
+        "Candidate can reschedule with the AI if now is a bad time.",
+        "Tone: warm and conversational, not a prickly HR screen.",
+        "Guardrail: politely cut in on long answers (“anything else in the next 20 seconds, then we’ll move on”), or ask a follow-up.",
+        "Reference for voice quality and intelligence: Wavelength."
+      ],
+      "open": [
+        "Call everyone, or only ~400 who pass a resume filter? Raw thoughts say everyone; the PRD says filter first.",
+        "Warm story-led chat (raw thoughts) or structured 6 questions + 2 resume probes (PRD)?",
+        "Verdict: No / Maybe / Good / Amazing plus other-role, culture and internship flags (raw thoughts), or a 0–100 score and top-20% shortlist (PRD)?",
+        "Call length: 10–15 minutes (raw thoughts) or 6–8 minutes (PRD)?",
+        "What is the canvas — recruiter view of all applicants, a per-candidate story page, or something else?",
+        "What do judges see live in the demo?",
+        "How do candidates consent to an AI call, and does the AI say it is an AI?",
+        "Where do applicants come from — which hiring platform, or a CSV upload for the demo?",
+        "What exactly gets added to the applicant record after the call?"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Edge cases",
+      "status": "not-started",
+      "goal": "List every way a call or the pipeline can go wrong, and decide how we handle each.",
+      "known": [],
+      "open": [
+        "Starter list to review (not agreed yet): no answer / voicemail, wrong number, call drops midway, bad network.",
+        "Candidate rambles, goes silent, asks “are you a bot?”, gets upset, or tries to negotiate salary.",
+        "Candidate wants Hindi or another language; heavy accent; background noise.",
+        "Candidate reschedules, then misses the rescheduled slot.",
+        "Bolna limit of 2 calls at a time vs 1,000 applicants."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "System architecture + SLD",
+      "status": "not-started",
+      "goal": "Design the whole system and draw the system-level diagram. Built with Fable.",
+      "known": [],
+      "open": []
+    },
+    {
+      "id": 4,
+      "name": "Build with subagents",
+      "status": "not-started",
+      "goal": "Split the architecture into independent pieces and build them in parallel with subagents.",
+      "known": [],
+      "open": []
+    }
+  ],
+  "decisions": [
+    {
+      "date": "2026-11-15",
+      "text": "Voice platform is Bolna AI."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Phone calls only — no Google Meet, no video."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Calls open by stating plainly that it’s about the job application."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Process: define → edge cases → architecture + SLD (Fable) → build with subagents."
+    }
+  ],
+  "sources": [
+    {
+      "label": "GitHub repo",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening",
+      "note": "Where all work lives."
+    },
+    {
+      "label": "Raw thoughts",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/raw-thoughts.md",
+      "note": "Shubh’s original brain-dump, tidied."
+    },
+    {
+      "label": "System PRD (Tushar)",
+      "url": "https://github.com/UX-ankit1514/AI-Powered-Recruitment-Screening/blob/main/docs/prd-voice-ai-screening-bolna.md",
+      "note": "Full PRD: scoring rubric, compliance, stack, business case, 24-hour plan. Differs from raw thoughts on who gets called and how calls are judged."
+    },
+    {
+      "label": "Bolna docs",
+      "url": "https://www.bolna.ai/docs",
+      "note": "Voice agents, calls, batches, transcripts."
+    },
+    {
+      "label": "Bolna MCP",
+      "url": "https://www.bolna.ai/docs/build-with-ai/mcp",
+      "note": "Lets Claude create agents and place calls directly."
+    },
+    {
+      "label": "Bolna dashboard",
+      "url": "https://platform.bolna.ai",
+      "note": "Account connected. Credit loaded, 2 calls at a time, no phone number or agents yet."
+    }
+  ]
+}

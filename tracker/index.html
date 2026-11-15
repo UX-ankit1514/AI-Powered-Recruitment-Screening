@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(98.5% 0.004 90);
+    --surface: oklch(100% 0 0);
+    --line: oklch(90% 0.004 90);
+    --ink: oklch(20% 0.01 90);
+    --ink-2: oklch(42% 0.01 90);
+    --ink-3: oklch(58% 0.008 90);
+    --accent: oklch(55% 0.13 155);
+    --accent-soft: oklch(94% 0.04 155);
+    --warn: oklch(62% 0.13 70);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: oklch(15% 0.005 90); --surface: oklch(18.5% 0.005 90); --line: oklch(27% 0.006 90);
+      --ink: oklch(95% 0.005 90); --ink-2: oklch(76% 0.006 90); --ink-3: oklch(60% 0.006 90);
+      --accent: oklch(74% 0.13 155); --accent-soft: oklch(28% 0.05 155); --warn: oklch(78% 0.12 75);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: oklch(15% 0.005 90); --surface: oklch(18.5% 0.005 90); --line: oklch(27% 0.006 90);
+    --ink: oklch(95% 0.005 90); --ink-2: oklch(76% 0.006 90); --ink-3: oklch(60% 0.006 90);
+    --accent: oklch(74% 0.13 155); --accent-soft: oklch(28% 0.05 155); --warn: oklch(78% 0.12 75);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.55 Geist, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--line); }
+  a:hover { text-decoration-color: var(--ink); }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 240px 1fr; gap: 48px; }
+  header.top { grid-column: 1 / -1; border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+  .eyebrow { font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+  h1 { font-family: "Instrument Serif", ui-serif, serif; font-weight: 400; font-size: 44px; line-height: 1.05; margin: 8px 0 10px; letter-spacing: -0.01em; }
+  .lede { color: var(--ink-2); font-size: 16px; max-width: 62ch; margin: 0; }
+  .meta { margin-top: 14px; display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--ink-3); }
+  .meta b { color: var(--ink); font-weight: 500; }
+
+  nav.stages { position: sticky; top: 24px; align-self: start; }
+  nav.stages ol { list-style: none; margin: 12px 0 0; padding: 0; border-left: 1px solid var(--line); }
+  nav.stages li button { all: unset; cursor: pointer; display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 9px 0 9px 14px; margin-left: -1px; border-left: 2px solid transparent; width: 100%; box-sizing: border-box; transition: color 150ms ease-out; color: var(--ink-3); }
+  nav.stages li button:hover { color: var(--ink); }
+  nav.stages li button[aria-current="true"] { border-left-color: var(--ink); color: var(--ink); }
+  nav.stages .n { font-family: "Geist Mono", monospace; font-size: 12px; padding-top: 1px; }
+  nav.stages .nm { font-weight: 500; }
+  nav.stages .st { display: block; font-size: 11px; font-family: "Geist Mono", monospace; margin-top: 2px; }
+  .st.in-progress { color: var(--accent); }
+  .st.done { color: var(--ink-2); }
+  .st.not-started { color: var(--ink-3); }
+
+  main section { margin-bottom: 48px; }
+  .stage-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h2 { font-family: "Instrument Serif", serif; font-weight: 400; font-size: 32px; margin: 0; letter-spacing: -0.005em; }
+  .chip { font-family: "Geist Mono", monospace; font-size: 11px; padding: 2px 8px; border-radius: 3px; border: 1px solid var(--line); color: var(--ink-3); }
+  .chip.in-progress { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+  .goal { color: var(--ink-2); margin: 8px 0 24px; font-size: 15px; }
+  .split { display: grid; grid-template-columns: 3fr 2fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .col { background: var(--surface); padding: 18px 20px; }
+  h3 { font-size: 12px; font-weight: 600; margin: 0 0 10px; display: flex; justify-content: space-between; }
+  h3 .count { font-family: "Geist Mono", monospace; font-weight: 400; color: var(--ink-3); }
+  ul.items { list-style: none; margin: 0; padding: 0; }
+  ul.items li { padding: 7px 0; border-top: 1px solid var(--line); color: var(--ink-2); }
+  ul.items li:first-child { border-top: 0; padding-top: 0; }
+  .col.open ul.items li { padding-left: 14px; position: relative; }
+  .col.open ul.items li::before { content: "?"; position: absolute; left: 0; font-family: "Geist Mono", monospace; color: var(--warn); font-size: 12px; }
+  .empty { color: var(--ink-3); font-style: italic; }
+
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 10px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td.k { width: 150px; font-weight: 500; padding-right: 16px; }
+  td.d { color: var(--ink-3); width: 100px; font-size: 12px; padding-top: 12px; }
+  td.v { color: var(--ink-2); }
+  .theme { all: unset; cursor: pointer; font-family: "Geist Mono", monospace; font-size: 11px; color: var(--ink-3); border: 1px solid var(--line); padding: 3px 8px; border-radius: 4px; }
+  .theme:hover { color: var(--ink); }
+
+  @media (max-width: 820px) {
+    .wrap { grid-template-columns: 1fr; gap: 28px; padding: 24px 16px 60px; }
+    nav.stages { position: static; }
+    .split { grid-template-columns: 1fr; }
+    h1 { font-size: 34px; }
+    td.k { width: 110px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow" id="eyebrow">Hackathon · project tracker</div>
+    <h1 id="title">Loading…</h1>
+    <p class="lede" id="lede"></p>
+    <div class="meta">
+      <span>Stage <b id="cur"></b></span>
+      <span>Updated <b id="upd" class="mono"></b></span>
+      <button class="theme" id="theme" type="button">Theme</button>
+    </div>
+  </header>
+
+  <nav class="stages" aria-label="Stages">
+    <div class="eyebrow">Stages</div>
+    <ol id="nav"></ol>
+  </nav>
+
+  <main>
+    <section id="stage"></section>
+    <section>
+      <div class="eyebrow">Decisions</div>
+      <table id="decisions"></table>
+    </section>
+    <section>
+      <div class="eyebrow">Sources</div>
+      <table id="sources"></table>
+    </section>
+  </main>
+</div>
+<script>
+const LABEL = { "in-progress": "In progress", "done": "Done", "not-started": "Not started" };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let data, selected;
+
+function list(items, emptyText) {
+  if (!items.length) return `<p class="empty">${emptyText}</p>`;
+  return `<ul class="items">${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
+}
+
+function renderStage() {
+  const s = data.stages.find(x => x.id === selected);
+  document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-current", String(+b.dataset.id === selected)));
+  document.getElementById("stage").innerHTML = `
+    <div class="eyebrow">Stage ${s.id} of ${data.stages.length}</div>
+    <div class="stage-head"><h2>${esc(s.name)}</h2><span class="chip ${s.status}">${LABEL[s.status]}</span></div>
+    <p class="goal">${esc(s.goal)}</p>
+    <div class="split">
+      <div class="col"><h3>What we know <span class="count">${s.known.length}</span></h3>${list(s.known, "Nothing yet.")}</div>
+      <div class="col open"><h3>Open questions <span class="count">${s.open.length}</span></h3>${list(s.open, "None yet — opens when this stage starts.")}</div>
+    </div>`;
+}
+
+function render() {
+  const cur = data.stages.find(x => x.id === data.currentStage);
+  document.getElementById("title").textContent = `${data.project}`;
+  document.getElementById("eyebrow").textContent = `Hackathon · ${data.workingName}`;
+  document.getElementById("lede").textContent = data.oneLiner;
+  document.getElementById("cur").textContent = `${cur.id} — ${cur.name}`;
+  document.getElementById("upd").textContent = data.updated;
+  document.getElementById("nav").innerHTML = data.stages.map(s => `
+    <li><button type="button" data-id="${s.id}"><span class="n">0${s.id}</span>
+      <span><span class="nm">${esc(s.name)}</span><span class="st ${s.status}">${LABEL[s.status]}</span></span></button></li>`).join("");
+  document.querySelectorAll("#nav button").forEach(b => b.onclick = () => { selected = +b.dataset.id; renderStage(); });
+  document.getElementById("decisions").innerHTML = data.decisions.map(d =>
+    `<tr><td class="d mono">${esc(d.date)}</td><td class="v">${esc(d.text)}</td></tr>`).join("");
+  document.getElementById("sources").innerHTML = data.sources.map(s =>
+    `<tr><td class="k"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a></td><td class="v">${esc(s.note)}</td></tr>`).join("");
+  selected = data.currentStage;
+  renderStage();
+}
+
+document.getElementById("theme").onclick = () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+};
+
+fetch("data.json", { cache: "no-store" }).then(r => r.json()).then(d => { data = d; render(); })
+  .catch(() => { document.getElementById("title").textContent = "Couldn’t load tracker data."; });
+</script>
+</body>
+</html>
