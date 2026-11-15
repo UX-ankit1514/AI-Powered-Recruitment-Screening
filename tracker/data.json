@@ -23,7 +23,8 @@
         "Different from HeyMilo / Hyring: we call everyone, spot other-role / culture / internship fit, and keep it a warm chat rather than a test.",
         "Team of four: Shubh, Ankit, Tushar, and one on market research.",
         "PRD v3 written: raw thoughts + both of Tushar's PRDs.",
-        "Shubh's latest decisions override earlier raw thoughts and both of Tushar's PRDs. Tushar's PRDs are not updated; PRD v3 is the master."
+        "Shubh's latest decisions override earlier raw thoughts and both of Tushar's PRDs. Tushar's PRDs are not updated; PRD v3 is the master.",
+        "Added from Tushar's PRD: name check, Hindi/English switching, resume-mismatch flag, side-by-side view, spreadsheet export, data kept 90 days / 12 months, heads-up SMS, status board, HR login, bias watch, 5-minute demo, business case, tech setup and build plan (for stage 3)."
       ],
       "open": [
         "Tushar to agree to PRD v3 changes: call everyone from any source, ≤10 min with short exit, no human option, culture fit + hidden-fit flags, new pick labels.",
@@ -104,6 +105,10 @@
     {
       "date": "2026-11-15",
       "text": "Calls max 10 minutes; polite 2–3 minute exit for clearly weak candidates (replaces 10–15 minutes)."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Every call starts with a name check. Tushar's extra items adopted into PRD v3."
     }
   ],
   "sources": [

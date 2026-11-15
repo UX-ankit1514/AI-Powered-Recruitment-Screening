@@ -80,7 +80,7 @@ The first 2–3 minutes decide which path a call takes.
 
 | Part | Time | What happens |
 |---|---|---|
-| Opening | 0:30 | Says it's about their application for [role] at [company], wants ~10 minutes, asks if now is good. Mentions the call is recorded. |
+| Opening | 0:30 | **Confirms it's speaking to [candidate name].** Says it's about their application for [role] at [company], wants ~10 minutes, asks if now is good. Mentions the call is recorded. If it's the wrong person, apologises and ends the call. |
 | Reschedule branch | — | If now isn't good, the AI offers times and books one. Call ends. |
 | Warm-up | ~2 min | "Tell me a bit about yourself and what you're looking for." One must-have check if the company set one. |
 | **Checkpoint (~3 min)** | — | **Short exit** if clearly not a fit (below). Otherwise, carry on. |
@@ -108,7 +108,7 @@ The short exit is warm: *"Thank you so much for your time, that's really helpful
   - If they still don't want to talk, the AI offers to reschedule. If they decline that too, it thanks them and ends the call. The candidate is marked "declined call", with no human follow-up.
 - **Time-boxing:** if an answer runs long, the AI politely cuts in: *"Thank you so much. Anything else you'd like me to know in the next 20 seconds, and then we'll move on?"* Or it asks a focused follow-up. Off-topic answers are redirected once, then the AI moves on. Hard stop at 10 minutes.
 - **Recording consent:** see section 11. Open question on what happens if someone refuses.
-- **Languages:** English first; Hinglish as a stretch goal.
+- **Languages:** English and Hindi. The AI switches language mid-call when the candidate does.
 - **Voice quality bar:** should feel as natural as Wavelength. Test on real Indian phone lines early.
 
 ## 7. Scoring: a rubric each company shapes
@@ -143,6 +143,7 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 - **Fits another role:** matched against the company's other open roles, with the reason.
 - **Culture standout:** strong culture fit even if the role doesn't fit.
 - **Wants an internship.**
+- **Resume doesn't match:** something said on the call contradicts the resume (skills, dates, roles), shown with the quote and the resume line.
 - **HR to review:** the call dropped (network), the audio was bad, or the transcript looks unreliable. These are flagged for HR to look at, not scored low. *(Internal only; nothing is promised to the candidate. A planned short exit is not flagged this way.)*
 
 ### Fairness
@@ -155,11 +156,21 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 1. **HR sets up the job:** job description, company culture notes, other open roles, rubric template + weights, calling hours.
 2. **HR uploads applicants:** spreadsheet of names + phone numbers, plus resumes.
 3. **System prepares each call:** reads resume against the job description; writes a personal brief (name, role, 1–2 resume questions).
-4. **Calls go out:** a queue feeds Bolna, 2 at a time on our current plan, inside calling hours. No answer → retry up to 3 times *(proposal)*.
-5. **The call happens** (section 6). Reschedules are booked back into the queue.
-6. **Results come back:** Bolna sends recording, transcript and call details when the call ends.
-7. **Scoring:** rubric scores, evidence quotes, pick, extra flags.
-8. **HR reviews on the canvas:** sorted list, each candidate's story, audio, scores, flags; HR can change any pick.
+4. **Heads-up message:** each candidate gets an SMS/WhatsApp with the company, role and a link to pick a call time.
+5. **Calls go out:** a queue feeds Bolna, 2 at a time on our current plan, inside calling hours or at the picked time. No answer → retry up to 3 times.
+6. **The call happens** (section 6). Reschedules are booked back into the queue.
+7. **Results come back:** Bolna sends recording, transcript and call details when the call ends.
+8. **Scoring:** rubric scores, evidence quotes, pick, extra flags.
+9. **HR reviews on the canvas** (section 8b), compares finalists, changes any pick, exports the shortlist.
+
+## 8b. The canvas (HR side)
+
+- **Login:** simple email login for HR, one company. Later: roles for recruiter, hiring manager and admin.
+- **Status board:** every candidate's stage: imported → queued → called / no answer → completed → shortlisted / rejected, with a live count of calls in progress.
+- **Ranked list:** sorted by pick and score, with filters (score, experience, location, notice period) and the extra flags.
+- **Candidate page:** resume, recording, transcript with key words highlighted, scores with quotes. Clicking a quote jumps the audio to that moment.
+- **Side-by-side view:** 2–3 finalists compared on scores, summary, best quote, red flags and an audio clip, for the hiring manager.
+- **Actions:** shortlist, reject, change a pick with a note, call again, and **export the shortlist to a spreadsheet**.
 
 ## 9. Who does what: Bolna vs our system
 
@@ -175,6 +186,7 @@ Companies can change any weight and add their own trait (e.g. "comfort with ambi
 7. The canvas / dashboard for HR.
 8. Storage, privacy and consent records.
 9. Cost tracking per call.
+10. Heads-up SMS/WhatsApp with time picker (separate messaging service).
 
 **To test with Bolna first:** whether the AI can politely interrupt a candidate mid-sentence (or must wait for a pause); voice quality on Indian phone lines; whether a pre-call text is possible (likely needs a separate service).
 
@@ -192,7 +204,11 @@ Example: 1,000 applicants, 60% pick up, half of those take the short exit → 30
 
 - Only call people who applied and gave their number, within reasonable hours.
 - Recording a call in India needs the person's consent (DPDP Act 2023). The opening mentions recording.
-- Keep only what we need; delete on request; set a retention period (e.g. 90 days) *(proposal)*.
+- Keep only what we need; delete on request. **Recordings kept 90 days; transcripts and scores 12 months**, then deleted automatically (each company can change this).
+- Notice at application: what we collect, why, how long we keep it, how to withdraw. Consent tick on the apply form.
+- Phone-number rules: respect Do-Not-Disturb, calling hours and daily caps (Bolna supports these). Which TRAI number series applies to hiring calls is still to be checked.
+- **Bias watch:** compare score patterns by language and region across the candidate pool, and alert HR if one group scores consistently lower.
+- Security: encrypted storage, expiring links to recordings, only accept results from Bolna's published addresses, log every view and change.
 - Resumes and recordings are sensitive: access only for the company's HR.
 - HR makes every final decision; picks are explained and can be challenged.
 - *This is product guidance, not legal advice.*
@@ -200,28 +216,33 @@ Example: 1,000 applicants, 60% pick up, half of those take the short exit → 30
 ## 12. Hackathon scope
 
 **Build for real**
-- Spreadsheet upload of applicants and resumes.
+- Spreadsheet upload of applicants and resumes, plus a public apply form.
+- Simple HR login.
 - Job setup with rubric template and weights.
 - Bolna call with personal brief, upfront opening, time-boxing, rescheduling.
 - Call results received and stored.
 - Scoring with evidence, pick, and extra flags.
-- Canvas with sorted list, candidate story, audio and override.
+- Canvas: status board, ranked list, candidate page with audio, change a pick, export to spreadsheet.
 
 **Fake for the demo**
-- A pre-scored batch of ~50 candidates to fill the canvas.
-- Hiring-platform integration (spreadsheet stands in).
-- Pre-call text message.
+- A pre-scored batch of ~20–50 candidates to fill the canvas.
+- Job-portal feeds (Naukri, LinkedIn) from sample data.
+- Side-by-side view and bias chart (static).
+- Heads-up SMS/WhatsApp.
 
 **Cut**
-- Video, coding tests, proctoring, billing, multiple companies, logins.
+- Video, coding tests, proctoring, billing, multiple companies, role-based logins, calendar booking, real portal and ATS sync.
 
-## 13. Demo (3 minutes) *(proposal, adapted from Tushar's)*
+## 13. Demo (5 minutes)
 
-- **0:00–0:30 · Problem.** 1,000 applicants; 900 never heard. Show one rejected resume that looks weak.
-- **0:30–1:00 · Setup.** Upload a job and applicants; pick the "Eager learner" rubric.
-- **1:00–2:00 · Live call.** A judge's or volunteer's phone rings. They hear the warm opening, tell a story, and the AI politely cuts in when they ramble.
-- **2:00–2:40 · Canvas.** The weak-resume candidate scores **Amazing**, or is flagged **fits another role**. Show evidence quotes; switch rubric to "Ready expert" and watch the order change.
-- **2:40–3:00 · Cost and ask.** ~₹85 a call; everyone gets heard.
+- **0:00–0:40 · Problem.** 1,000 applicants, one recruiter, three weeks; 900 never heard. Show one rejected resume that looks weak.
+- **0:40–1:30 · Setup.** Upload a job description live; the rubric appears; pick "Eager learner" and edit one must-have.
+- **1:30–2:00 · Applicants.** 20 applicants already in from "Naukri" and "LinkedIn" (sample data) and the spreadsheet.
+- **2:00–3:30 · Live call.** A teammate's or judge's phone rings on stage, on speaker. The room hears the name check, the warm opening, a question about their own resume, and the AI politely cutting in when they ramble.
+- **3:30–4:30 · Canvas.** The call lands in the ranked list. The weak-resume candidate scores **Amazing** or is flagged **fits another role**. Click a quote and the audio jumps to it. Switch the rubric to "Ready expert" and watch the order change.
+- **4:30–5:00 · Business case and ask.** One slide: cost per call, time saved, pilot ask.
+
+**If the live call fails:** switch to a pre-recorded call and replay a saved result, so the list still updates live. Rehearse the switch once.
 
 ## 13b. Adopted from Tushar's second PRD
 
@@ -231,6 +252,39 @@ Example: 1,000 applicants, 60% pick up, half of those take the short exit → 30
 - **Demo safety net:** a pre-recorded call and a saved result payload, so the dashboard still updates if the live call fails.
 - **Reliable result handling:** each Bolna result processed once even if sent twice; retries if our system is down.
 - **Target market to test first:** high-volume Indian hiring (BPO, sales, retail, campus/fresher roles), where people are phone-first. *(Market research teammate to confirm.)*
+
+## 13c. Business case *(from Tushar's PRD; market research teammate to validate)*
+
+- **Segments, in order:** high-volume Indian hiring (BPO/CX, inside sales, retail, logistics, campus and fresher); startups hiring 10–50 a quarter without a hiring team; staffing and recruitment-outsourcing firms.
+- **Market size (rough):** 5,000 Indian employers and staffing firms × 10,000 screens a year × ₹100 ≈ **₹500 crore a year**. Replace with real counts before using outside the team.
+- **Human vs AI for 1,000 applicants:** a recruiter takes ~31 working days and ~₹75,000; the AI takes ~12 hours of calling at 10 calls at a time (we have 2 today) and ~₹33,000 at our cost estimate.
+- **Pricing ideas:** ₹120 per completed call (startups, trials); ₹49,000 for 500 calls (mid-size, campus drives); ₹15 lakh a year including 20,000 calls (enterprise, staffing). At our blended cost of ~₹55 per completed call (mix of full calls and short exits), ₹120 gives ~54% margin. *(Tushar's margins used ₹43 cost and are too optimistic.)*
+- **Competitors:** Apna AI calling agent (calls Apna applicants in Indian languages), Paradox (chatbot screening), HireVue (video interviews), Hunar.AI (WhatsApp and voice for frontline hiring), HeyMilo, Hyring, and Bolna's own recruitment customers (Awign, Hyreo).
+- **Go-to-market:** free pilots with 3 Bengaluru startups and one staffing firm; publish an "AI vs recruiter" comparison; then HR communities, Startup India and as an add-on for hiring-software vendors.
+- **Moat over time:** learning from HR's changes and later-round outcomes to tune rubrics; trust from auditable, bias-watched scoring; integrations into the tools companies already use.
+
+## 13d. Tech setup and build plan *(Tushar's proposal; starting point for stage 3)*
+
+| Layer | Proposal |
+|---|---|
+| Web app | Next.js + Tailwind + shadcn on Vercel |
+| Backend | Python (FastAPI) |
+| Database, login, file storage, live updates | Supabase |
+| Call queue | A database table + worker for now |
+| AI for reading resumes and scoring | GPT-4o-class or Claude, structured output |
+| Voice | Bolna agent (Deepgram speech-to-text, ElevenLabs/Cartesia voice) |
+
+**24-hour plan for 4 people (stretch to 48):**
+
+| Hours | Frontend | Backend | AI / call script | PM / demo |
+|---|---|---|---|---|
+| 0–4 | App shell, job page, upload | Database, login, file storage | Rubric-reading prompt; Bolna agent created | Sample job, 20 resumes, demo script draft |
+| 4–10 | Status board | Spreadsheet/form intake, resume reading, Bolna call | Per-candidate call brief, questions | Test calls with the team, note failures |
+| 10–16 | Ranked list, candidate page | Receiving results, scoring queue | Scoring prompt with quotes | Sample data, portal mock |
+| 16–22 | Transcript highlights, audio, live updates | Error handling | Tune scores on 5 test calls | Pitch deck, rehearse |
+| 22–24 | Polish | Freeze, deploy | Freeze prompts | Record fallback video |
+
+*Final architecture is decided in stage 3 (with the system diagram built in Fable).*
 
 ## 14. Team
 
@@ -264,4 +318,7 @@ Tracker: https://recruit-screening-tracker.vercel.app
 4. **Where applicants come from** after the hackathon: which hiring platform?
 5. **Bolna wallet and limits:** is the 500 balance in dollars or rupees? Our account allows 2 calls at a time; Tushar's PRD assumes 10. Ask Bolna to raise it.
 6. **Can the AI interrupt mid-sentence** on Bolna, or only at pauses? Test first.
-7. **Team roles:** who owns what?
+7. **Team roles:** who owns what? (Section 13d suggests frontend, backend, AI/call script, PM/demo; the market research teammate likely takes PM/demo and the business case.)
+8. **Which TRAI number series** applies to hiring calls?
+9. **Should candidates see their own score or summary?**
+10. **Who owns candidate data:** the employer, us, or both?
