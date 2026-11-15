@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hirefy — Sales Executive screening</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2324837B'/%3E%3Ctext x='16' y='24' font-family='Georgia,serif' font-size='22' text-anchor='middle' fill='%23FFFCF0'%3EH%3C/text%3E%3C/svg%3E">
@@ -36,8 +37,10 @@
   --serif:"Instrument Serif",Georgia,serif;
   --sans:"Geist",system-ui,sans-serif;
   --mono:"Geist Mono",ui-monospace,monospace;
+  color-scheme:light;
 }
-@media (prefers-color-scheme:dark){
+/* Light mode only (founder decision): dark palette kept but disabled */
+@media not all{
   :root{
     --bg:#100F0F;          /* black */
     --surface:#1C1B1A;     /* base-950 */
