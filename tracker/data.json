@@ -16,23 +16,27 @@
         "Flow: apply → land on hiring platform → AI calls → AI judges fit to JD and company → enrich applicant record + give a verdict.",
         "Verdict scale: No / Maybe / Good / Amazing.",
         "Also capture: fit for another role, general culture fit, looking for an internship.",
-        "Phone call only. No Google Meet, no video. The call has to feel perfect.",
         "Opens upfront: “This is about your job application for [role] — can we do a 10-minute chat?”",
         "Candidate can reschedule with the AI if now is a bad time.",
         "Tone: warm and conversational, not a prickly HR screen.",
         "Guardrail: politely cut in on long answers (“anything else in the next 20 seconds, then we’ll move on”), or ask a follow-up.",
-        "Reference for voice quality and intelligence: Wavelength."
+        "Reference for voice quality and intelligence: Wavelength.",
+        "Phone call only, 10–15 minutes. No Google Meet, no video.",
+        "No “talk to a human” option. Candidates speak with the AI only.",
+        "Every call gets a culture-fit score alongside skills, experience and confidence.",
+        "Rubric is set per company: some want people who already know everything, some want eager learners, some want curious, journalist-type people or a strong culture fit. Dimensions and weights change by company.",
+        "Rough cost: about ₹85 for a 10-minute call on Bolna's standard rate (≈ ₹65–70 at volume pricing)."
       ],
       "open": [
         "Call everyone, or only ~400 who pass a resume filter? Raw thoughts say everyone; the PRD says filter first.",
         "Warm story-led chat (raw thoughts) or structured 6 questions + 2 resume probes (PRD)?",
         "Verdict: No / Maybe / Good / Amazing plus other-role, culture and internship flags (raw thoughts), or a 0–100 score and top-20% shortlist (PRD)?",
-        "Call length: 10–15 minutes (raw thoughts) or 6–8 minutes (PRD)?",
         "What is the canvas — recruiter view of all applicants, a per-candidate story page, or something else?",
         "What do judges see live in the demo?",
         "How do candidates consent to an AI call, and does the AI say it is an AI?",
         "Where do applicants come from — which hiring platform, or a CSV upload for the demo?",
-        "What exactly gets added to the applicant record after the call?"
+        "What exactly gets added to the applicant record after the call?",
+        "If a candidate refuses to be recorded, the call ends and they're marked “declined”. Confirm this is acceptable (recording needs consent)."
       ]
     },
     {
@@ -82,6 +86,18 @@
     {
       "date": "2026-11-15",
       "text": "Process: define → edge cases → architecture + SLD (Fable) → build with subagents."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "No human-callback option; candidates talk only to the AI."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Calls are 10–15 minutes (overrides the PRD's 6–8)."
+    },
+    {
+      "date": "2026-11-15",
+      "text": "Rubric is per company, and always includes culture fit."
     }
   ],
   "sources": [
