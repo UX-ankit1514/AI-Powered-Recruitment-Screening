@@ -429,6 +429,11 @@ h1,h2,.kpi b,.wordmark{font-variation-settings:"opsz" 72;letter-spacing:-.02em}
 .lc.idle p{margin:4px 0 8px}
 .lc-go{color:#9ccfd8;font-weight:600;text-decoration:none;font-size:13px}
 .lc-go:hover{text-decoration:underline}
+@keyframes rowflash{0%,45%{background:var(--accent-soft)}100%{background:transparent}}
+@keyframes rowbar{0%,45%{box-shadow:inset 3px 0 0 var(--accent)}100%{box-shadow:inset 3px 0 0 transparent}}
+tr.flash td{animation:rowflash 3s ease-out}
+tr.flash td:first-child{animation:rowflash 3s ease-out,rowbar 3s ease-out}
+@media (prefers-reduced-motion:reduce){tr.flash td{animation:none;background:var(--accent-soft)}}
 </style>
 </head>
 <body>
@@ -1118,6 +1123,7 @@ window.addEventListener('hashchange',route);
 document.addEventListener('click',function(e){
   var t=e.target;
   var pb=t.closest('[data-p]'); if(pb){ loadPreset(pb.dataset.p); renderSliders(); render(); return; }
+  var fo=t.closest('[data-focus]'); if(fo){ focusRow(fo.dataset.focus); return; }
   var go=t.closest('[data-goto]'); if(go){ showTab(go.dataset.goto); return; }
   var ac=t.closest('[data-act]'); if(ac){ setupAct(ac.dataset.act); return; }
   var ab=t.closest('[data-ats]'); if(ab){ ats.mode=ab.dataset.ats; saveAts(); render(); return; }
@@ -1276,7 +1282,7 @@ function landResult(name, r, sample){
   setStatus('Ranked', name+' has been scored and added to the ranking.', 5, false);
   finish(); render();
   var s=scoreOf(c);
-  $('stageResult').innerHTML='<div class="result"><div class="result-top">'+pickChip(s)+'<span class="num">'+s.overall+'</span><b>'+esc(name)+'</b>'+badge(c)+'</div><p>'+esc(c.summary||'Scored and added to the ranking.')+'</p><div class="btnrow"><button class="btn sm" type="button" data-open="'+c.id+'">Open profile</button><button class="btn2 sm" type="button" data-goto="dashboard">See it on the dashboard</button></div></div>';
+  $('stageResult').innerHTML='<div class="result"><div class="result-top">'+pickChip(s)+'<span class="num">'+s.overall+'</span><b>'+esc(name)+'</b>'+badge(c)+'</div><p>'+esc(c.summary||'Scored and added to the ranking.')+'</p><div class="btnrow"><button class="btn sm" type="button" data-open="'+c.id+'">Open profile</button><button class="btn2 sm" type="button" data-focus="'+c.id+'">See it on the dashboard</button></div></div>';
 }
 
 function addLive(name, r, sample){
@@ -1529,6 +1535,17 @@ window.hirefyDemo={setStatus:setStatus};
     this.value='';
   });
 })();
+
+function focusRow(id){
+  try{ var q=document.querySelector('#view-dashboard input[type=search], input[aria-label="Search candidates"]'); if(q && q.value){ q.value=''; q.dispatchEvent(new Event('input',{bubbles:true})); } }catch(e){}
+  location.hash='dashboard';
+  var tries=0;(function look(){
+    var rows=[].slice.call(document.querySelectorAll('tr[data-id="'+id+'"]')).filter(function(r){return r.offsetParent;});
+    if(rows.length){ var r=rows[0]; r.scrollIntoView({behavior:'smooth',block:'center'}); r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash'); return; }
+    if(tries===3){ try{ var all=[].slice.call(document.querySelectorAll('#view-dashboard button')).find(function(x){ return /^All\s*\d/.test((x.textContent||'').trim()) && x.offsetParent; }); if(all) all.click(); }catch(e){} }
+    if(++tries<20) setTimeout(look,100);
+  })();
+}
 </script>
 </body>
 </html>
