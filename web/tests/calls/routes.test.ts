@@ -10,6 +10,7 @@ import { randomInt, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SEED, adminClient, seed } from "../../scripts/seed";
+import { clearOfLiveDispatcher } from "../security/helpers";
 
 const h = vi.hoisted(() => ({ client: null as unknown }));
 vi.mock("server-only", () => ({}));
@@ -62,6 +63,9 @@ const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const ACME = SEED.acme.id;
 const service = adminClient() as unknown as DB;
 const scoreMock = vi.mocked(scoreCall);
+
+// dispatcher tests first wait (up to ~30 s) for a moment clear of the live cron dispatcher
+vi.setConfig({ testTimeout: 90_000 });
 
 const WH_SECRET = `test-wh-${randomUUID()}`;
 const DISPATCH_SECRET = `test-dispatch-${randomUUID()}`;
@@ -521,6 +525,7 @@ describe("dispatcher", () => {
   });
 
   it("claims never exceed the COMPANY's line cap across all its jobs (2 jobs x 5 queued, 2 lines), even with parallel dispatchers", async () => {
+    await clearOfLiveDispatcher();
     const co = await makeCompany(2);
     const jobA = await makeJob({ company: co, limit: 50 });
     const jobB = await makeJob({ company: co, limit: 50 });
@@ -542,6 +547,7 @@ describe("dispatcher", () => {
   });
 
   it("company lines unset → the server default (p_default_lines) applies; another company's calls are unaffected", async () => {
+    await clearOfLiveDispatcher();
     const co = await makeCompany(null);
     const job = await makeJob({ company: co });
     for (let i = 0; i < 4; i++) await makeCall(job);
@@ -564,6 +570,7 @@ describe("dispatcher", () => {
   });
 
   it("SAFETY LOCK: DISPATCH_ENABLED unset → calls blocked, Bolna never contacted", async () => {
+    await clearOfLiveDispatcher();
     expect(process.env.DISPATCH_ENABLED).toBeUndefined();
     // own company with 2 lines: rows other tests leave in flight cannot change the counts below
     const job = await makeJob({ company: await makeCompany(2) });
@@ -598,6 +605,7 @@ describe("dispatcher", () => {
   });
 
   it("enabled + Indian mobile → POST /call with the app agent and full user_data (mocked Bolna)", async () => {
+    await clearOfLiveDispatcher();
     process.env.DISPATCH_ENABLED = "true";
     const exec = execId();
     bolnaReply = () => new Response(JSON.stringify({ message: "done", status: "queued", execution_id: exec }), { status: 200 });

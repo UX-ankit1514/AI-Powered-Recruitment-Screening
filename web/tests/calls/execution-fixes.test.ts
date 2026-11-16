@@ -13,7 +13,7 @@
  */
 import { randomInt, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { ACME, castOfUsers, cleanupCast, jsonReq, service, type Cast, type DB } from "../security/helpers";
+import { ACME, castOfUsers, cleanupCast, clearOfLiveDispatcher, jsonReq, service, type Cast, type DB } from "../security/helpers";
 
 const h = vi.hoisted(() => ({ client: null as unknown }));
 vi.mock("server-only", () => ({}));
@@ -60,6 +60,9 @@ import * as closeRoute from "../../app/api/jobs/[id]/close/route";
 import * as linesRoute from "../../app/api/settings/lines/route";
 import * as actionsRoute from "../../app/api/candidates/[id]/actions/route";
 import * as jobRoute from "../../app/api/jobs/[id]/route";
+
+// some tests first wait (up to ~30 s) for a moment clear of the live cron dispatcher
+vi.setConfig({ testTimeout: 90_000 });
 
 const ALL_HOURS = { start: "00:00", end: "24:00", days: [0, 1, 2, 3, 4, 5, 6] };
 const WH_SECRET = `test-wh-${randomUUID()}`;
@@ -298,6 +301,7 @@ describe("Stop really stops", () => {
   });
 
   it("the dispatcher never picks up a non-callback call of a stopped batch; booked callbacks still go out", async () => {
+    await clearOfLiveDispatcher();
     const job = await makeJob(await makeCompany(5));
     const batch = await makeBatch(job, "stopped");
     const stray = await makeCall(job, { batch_id: batch });
@@ -321,6 +325,7 @@ describe("Stop really stops", () => {
 // ===========================================================================
 describe("close job + reject candidate cancel waiting calls", () => {
   it("recruiter closes a job: waiting calls cancelled, callbacks kept and still dialable, batches stopped", async () => {
+    await clearOfLiveDispatcher();
     const job = await makeJob(await makeCompany(5));
     const batch = await makeBatch(job);
     const waiting = await makeCall(job, { batch_id: batch });
@@ -371,6 +376,7 @@ describe("close job + reject candidate cancel waiting calls", () => {
   });
 
   it("the dispatcher never dials a rejected candidate", async () => {
+    await clearOfLiveDispatcher();
     const job = await makeJob(await makeCompany(5));
     const cand = await makeCandidate(job, phone(), "rejected");
     await makeCall(job, { candidate_id: cand });
@@ -381,6 +387,7 @@ describe("close job + reject candidate cancel waiting calls", () => {
 // ===========================================================================
 describe("account-wide cap and capacity refusals", () => {
   it("a Bolna 429 puts the call back in 2 minutes without using an attempt", async () => {
+    await clearOfLiveDispatcher();
     process.env.DISPATCH_ENABLED = "true";
     bolnaReply = () => new Response(JSON.stringify({ error: "concurrency limit" }), { status: 429 });
     const job = await makeJob(await makeCompany(2));

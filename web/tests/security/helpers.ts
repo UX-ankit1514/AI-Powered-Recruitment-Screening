@@ -82,3 +82,16 @@ export const jsonReq = (method: string, body?: unknown, url = "http://localhost/
     headers: { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
+/**
+ * The live project's pg_cron calls the deployed dispatcher at the top of every minute, and it
+ * claims ANY due phone call in ANY company (calling is paused in production, so it finishes them
+ * as dispatch_blocked a few seconds after :00). A test that inserts a dialable row and then claims
+ * it itself must not straddle that moment: wait until we are 8-40 s into the minute first.
+ */
+export async function clearOfLiveDispatcher() {
+  const s = new Date().getUTCSeconds();
+  if (s >= 8 && s < 40) return;
+  const wait = (s >= 40 ? 68 - s : 8 - s) * 1000;
+  await new Promise((r) => setTimeout(r, wait));
+}
