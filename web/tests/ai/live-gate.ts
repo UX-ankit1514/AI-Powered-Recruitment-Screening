@@ -8,6 +8,8 @@ let cached: Promise<string | null> | null = null;
 
 export function liveSkipReason(): Promise<string | null> {
   cached ??= (async () => {
+    // Live AI calls cost real credit (small prepaid budget): opt in explicitly.
+    if (process.env.AI_LIVE_TESTS !== "1") return "live AI tests off (set AI_LIVE_TESTS=1 to run)";
     if (!process.env.AI_API_KEY) return "no AI_API_KEY";
     try {
       await chat([{ role: "user", content: "Reply with the single word ok." }], { maxTokens: 5, timeoutMs: 20_000 });
