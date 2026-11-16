@@ -33,6 +33,18 @@ export const IconStar = ({ className }: P) => (
     <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
   </svg>
 );
+export const IconScale = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M12 3v18M7 21h10M5 7h14" />
+    <path d="M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z" />
+  </svg>
+);
+export const IconLink = ({ className }: P) => (
+  <svg {...base(className)}>
+    <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" />
+    <path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />
+  </svg>
+);
 export const IconSettings = ({ className }: P) => (
   <svg {...base(className)}>
     <circle cx="12" cy="12" r="3" />

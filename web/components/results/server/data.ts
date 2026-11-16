@@ -16,6 +16,7 @@ import {
 } from "@/components/results/model";
 import { readFlags } from "@/components/candidate-format";
 import { pickFor, computeOverall } from "@/lib/ai/scoring-math";
+import { AgreementSchema, JdFitSchema, type JdFit } from "@/lib/ai/schemas";
 import {
   CallingHoursSchema,
   CustomTraitSchema,
@@ -171,7 +172,38 @@ export type Profile = {
   recording_signed_url: string | null;
   actions: ProfileAction[];
   other_jobs: { id: string; title: string }[];
+  /** Multi-pass evaluation detail (null for calls scored before it existed). */
+  evaluation: ProfileEvaluation | null;
 };
+
+export type ProfileEvaluation = {
+  jdFit: JdFit;
+  /** 0–1, from how much of the plan was covered and whether the two scoring passes agreed. */
+  confidence: number | null;
+  needsReview: boolean;
+  /** Criteria where the two scoring passes were more than a point apart. */
+  disagreements: { id: string; label: string; a: number | null; b: number | null }[];
+};
+
+function readEvaluation(
+  row: { jd_fit?: unknown; confidence?: unknown; needs_review?: unknown; agreement?: unknown } | null | undefined,
+  qualityNames: Map<string, string>,
+): ProfileEvaluation | null {
+  if (!row) return null;
+  const fit = JdFitSchema.safeParse(row.jd_fit);
+  if (!fit.success) return null;
+  const agreement = AgreementSchema.safeParse(row.agreement);
+  const reqNames = new Map(fit.data.requirements.map((r) => [r.id, r.text]));
+  const conf = typeof row.confidence === "number" ? row.confidence : typeof row.confidence === "string" ? Number(row.confidence) : null;
+  return {
+    jdFit: fit.data,
+    confidence: conf !== null && Number.isFinite(conf) ? Math.min(1, Math.max(0, conf)) : null,
+    needsReview: row.needs_review === true,
+    disagreements: agreement.success
+      ? agreement.data.disagreements.map((d) => ({ id: d.id, label: reqNames.get(d.id) ?? qualityNames.get(d.id) ?? d.id, a: d.a, b: d.b }))
+      : [],
+  };
+}
 
 const RECORDING_TTL_S = 600;
 
@@ -200,7 +232,7 @@ export async function loadProfile(db: Db, candidateId: string, userId: string): 
     db.from("rubrics").select("version, weights, custom_traits, must_haves").eq("job_id", c.job_id).eq("is_current", true).maybeSingle(),
     db
       .from("scores")
-      .select("id, call_id, created_at, rubric_version, qualities, must_have_results, flags, summary, short_exit")
+      .select("id, call_id, created_at, rubric_version, qualities, must_have_results, flags, summary, short_exit, jd_fit, confidence, needs_review, agreement")
       .eq("candidate_id", candidateId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -281,6 +313,7 @@ export async function loadProfile(db: Db, candidateId: string, userId: string): 
       by_me: a.user_id === userId,
     })),
     other_jobs: (jobs ?? []).filter((j) => j.id !== c.job_id).map((j) => ({ id: j.id, title: j.title })),
+    evaluation: readEvaluation(scoreRow, new Map(qualityList(rubric).map((q) => [q.key, q.name]))),
   };
 }
 

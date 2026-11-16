@@ -1,7 +1,7 @@
 /** Call row transitions shared by the dispatcher, webhook and reschedule endpoint. Service role only. */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../database.types";
-import { MAX_ATTEMPTS, MAX_RESCHEDULES, RETRY_DELAY_MIN } from "./config";
+import { CAPACITY_REFUSALS, MAX_ATTEMPTS, MAX_RESCHEDULES, REFUSAL_REQUEUE_MIN, RETRY_DELAY_MIN } from "./config";
 import type { CallOutcome } from "./outcome";
 
 export type DB = SupabaseClient<Database>;
@@ -51,22 +51,34 @@ export async function finishCall(db: DB, callId: string, f: FinishInput): Promis
     .maybeSingle();
   if (!row) return null;
 
-  const retried = Boolean(f.retry) && row.attempt < MAX_ATTEMPTS;
+  // Bolna had no free line: try again in 2 min on the same attempt (the candidate was never rung).
+  const refused = CAPACITY_REFUSALS.has(String(row.termination_reason ?? "").toLowerCase());
+  // Browser test calls never turn into phone calls; a stopped batch never retries.
+  const retried = Boolean(f.retry) && row.call_kind === "phone" && (refused || row.attempt < MAX_ATTEMPTS) && !(await batchStopped(db, row.batch_id));
   if (retried) {
-    await db.from("calls").insert({
+    await untyped(db).from("calls").insert({
       candidate_id: row.candidate_id,
       job_id: row.job_id,
       company_id: row.company_id,
       batch_id: row.batch_id,
-      attempt: row.attempt + 1,
+      attempt: refused ? row.attempt : row.attempt + 1,
       reschedule_count: row.reschedule_count,
-      due_at: new Date(Date.now() + RETRY_DELAY_MIN * 60_000).toISOString(),
+      // a refusal re-queues the same booked call; the candidate already had (or skipped) a heads-up
+      ...(refused ? { scheduled: row.scheduled, heads_up: false } : {}),
+      due_at: new Date(Date.now() + (refused ? REFUSAL_REQUEUE_MIN : RETRY_DELAY_MIN) * 60_000).toISOString(),
       state: "queued",
       call_kind: "phone",
     });
     await setCandidateStatus(db, row.candidate_id, "queued");
   }
   return { row, retried };
+}
+
+/** True when the call belongs to a batch the team stopped. */
+export async function batchStopped(db: DB, batchId: string | null): Promise<boolean> {
+  if (!batchId) return false;
+  const { data } = await db.from("batches").select("status").eq("id", batchId).maybeSingle();
+  return data?.status === "stopped";
 }
 
 /** Final state of a candidate's call chain with no score: back to 'imported' so a recruiter can retry. */

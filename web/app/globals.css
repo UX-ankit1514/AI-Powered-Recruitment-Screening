@@ -1381,3 +1381,85 @@
     }
   }
 }
+
+/* job page: apply link + close job */
+@layer components {
+  .jobbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 28px;
+    align-items: start;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+  }
+  .jobbar-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .jobbar-title svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--color-accent-ink);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .jobbar-title h2 {
+    font-size: 15px;
+  }
+  .jobbar .hint {
+    margin: 6px 0 12px;
+    max-width: 68ch;
+  }
+  .jobbar-copy {
+    display: flex;
+    gap: 8px;
+    max-width: 640px;
+  }
+  .jobbar-copy input {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--color-text-2);
+    background: var(--color-sunken);
+  }
+  .jobbar-close {
+    justify-self: end;
+  }
+  .jobbar-confirm {
+    max-width: 360px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+  }
+  .jobbar-confirm p {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: var(--color-text-2);
+  }
+  .jobbar-confirm .chk {
+    margin-top: 10px;
+  }
+  .jobbar-confirm .btnrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .jobbar-msg {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  @media (max-width: 760px) {
+    .jobbar {
+      grid-template-columns: 1fr;
+    }
+    .jobbar-close {
+      justify-self: start;
+    }
+  }
+}

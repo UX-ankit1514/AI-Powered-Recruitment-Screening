@@ -1,11 +1,16 @@
+import { z } from "zod";
+import { cancelQueuedCalls, countCallbacks, releaseCandidates } from "@/lib/calls/cancel";
 import { UUID, WRITE_ROLES, json, jsonError, requireJobRole, requireSession } from "@/lib/ingest/http";
 
+const Body = z.object({ cancel_callbacks: z.boolean().optional() }).catch({});
+
 /**
- * POST /api/batches/:id/cancel (admin/recruiter) — "Stop": removes the batch's calls that are
- * still waiting in the queue. Calls already dialling or on a call finish normally. Cancelled
- * candidates go back to "imported" so they can be called later. RLS applies to every write.
+ * POST /api/batches/:id/cancel (admin/recruiter) — "Stop": the batch is marked stopped first (so no
+ * call of it can retry or be picked up again), then its waiting calls are removed. Calls already
+ * dialling or on a call finish normally. Booked callbacks are promises to a candidate and are kept
+ * unless { cancel_callbacks: true }. Cancelled candidates go back to "imported". RLS applies.
  */
-export async function POST(_req: Request, ctx: RouteContext<"/api/batches/[id]/cancel">) {
+export async function POST(req: Request, ctx: RouteContext<"/api/batches/[id]/cancel">) {
   const { id } = await ctx.params;
   const session = await requireSession();
   if (session instanceof Response) return session;
@@ -16,13 +21,13 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/batches/[id]/c
   const auth = await requireJobRole(batch.job_id, WRITE_ROLES);
   if (auth instanceof Response) return auth;
   const db = auth.supabase;
+  const { cancel_callbacks } = Body.parse(await req.json().catch(() => ({})));
 
-  const { data: removed, error } = await db.from("calls").delete().eq("batch_id", id).eq("state", "queued").select("candidate_id");
-  if (error) return jsonError(error.code === "42501" ? 403 : 400, "Could not stop the batch");
-  const ids = [...new Set((removed ?? []).map((r) => r.candidate_id))];
-  for (let i = 0; i < ids.length; i += 200) {
-    await db.from("candidates").update({ status: "imported" }).in("id", ids.slice(i, i + 200)).eq("status", "queued");
-  }
-  await db.from("batches").update({ status: "stopped" }).eq("id", id);
-  return json({ cancelled: ids.length, status: "stopped" });
+  const { error: stopErr } = await db.from("batches").update({ status: "stopped" }).eq("id", id);
+  if (stopErr) return jsonError(stopErr.code === "42501" ? 403 : 400, "Could not stop the batch");
+  const res = await cancelQueuedCalls(db, { batchId: id }, { includeCallbacks: cancel_callbacks === true });
+  if (res.error) return jsonError(res.error === "42501" ? 403 : 400, "Could not stop the batch");
+  await releaseCandidates(db, res.candidateIds);
+  const kept = cancel_callbacks === true ? 0 : await countCallbacks(db, { batchId: id });
+  return json({ cancelled: res.candidateIds.length, callbacks_kept: kept, status: "stopped" });
 }

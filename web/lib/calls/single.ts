@@ -1,7 +1,8 @@
 /**
  * Single-call routes for the dashboard (admin / recruiter only).
- *  POST /api/calls/phone        {candidate_id} → queues an immediate phone call; the dispatcher
- *                                dials it (safety lock + calling hours + concurrency apply).
+ *  POST /api/calls/phone        {candidate_id} → "Call now": queues an immediate phone call; the
+ *                                dispatcher dials it (safety lock + calling hours + line cap apply).
+ *                                No heads-up message: the call is placed right away.
  *  POST /api/calls/web-session  {candidate_id} → mints a Bolna Web Call session for the app agent
  *                                with the brief as user_data; returns Bolna's response unchanged.
  */
@@ -13,7 +14,7 @@ import { dispatchEnabled } from "./config";
 import { buildUserData, loadCallContext } from "./context";
 import { mintWebSession } from "./bolna";
 import { kickDispatcher } from "./kick";
-import { setCandidateStatus } from "./lifecycle";
+import { setCandidateStatus, untyped } from "./lifecycle";
 
 async function body(req: Request): Promise<Record<string, unknown>> {
   const b = await req.json().catch(() => null);
@@ -32,7 +33,7 @@ export async function handlePhoneCall(req: Request, kick: (jobId: string) => voi
   const { supabase: db, candidate } = auth;
   if (await hasOpenCall(db, candidate.id)) return jsonError(409, "This candidate already has a call queued or in progress");
 
-  const { data: call, error } = await db
+  const { data: call, error } = await untyped(db)
     .from("calls")
     .insert({
       candidate_id: candidate.id,
@@ -42,6 +43,7 @@ export async function handlePhoneCall(req: Request, kick: (jobId: string) => voi
       due_at: new Date().toISOString(),
       attempt: 1,
       call_kind: "phone",
+      heads_up: false,
     })
     .select("id, state, due_at")
     .single();

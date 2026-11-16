@@ -26,6 +26,10 @@ vi.mock("../../lib/ai", async (importOriginal) => {
   return {
     ...orig,
     scoreCall: vi.fn(),
+    // webhook-time call classification: offline here, so the heuristic fallback runs (no network)
+    classifyCall: vi.fn(async () => {
+      throw new Error("offline");
+    }),
     writeCallBrief: vi.fn(async (_p: unknown, _r: unknown, job: { title: string }, company: { name: string }, opts: { callId?: string }) => ({
       call_id: opts.callId,
       first_name: "Test",
@@ -48,7 +52,7 @@ import { scoreCall } from "../../lib/ai";
 import { handleBolnaWebhook } from "../../lib/calls/webhook";
 import { handleReschedule } from "../../lib/calls/reschedule";
 import { handleDispatch, runDispatch } from "../../lib/calls/dispatch";
-import { handleScreen } from "../../lib/calls/screen";
+import { handleCreateBatch } from "../../lib/ingest/batches";
 import { handlePhoneCall, handleWebSession } from "../../lib/calls/single";
 import { APP_AGENT_ID } from "../../lib/calls/config";
 
@@ -87,6 +91,7 @@ const ENV_KEYS = ["DISPATCH_ENABLED", "BOLNA_WEBHOOK_SECRET", "DISPATCH_SECRET",
 
 let anon: DB, acmeAdmin: DB, acmeHm: DB, otherAdmin: DB;
 const jobs: string[] = [];
+const companies: string[] = [];
 const execIds: string[] = [];
 let jobId = ""; // all-hours job, concurrency 2
 let otherOpenJobTitle = "";
@@ -111,11 +116,22 @@ async function signedIn(email: string, pwEnv: string): Promise<DB> {
   return c;
 }
 
-async function makeJob(opts: { hours?: object; limit?: number; title?: string } = {}) {
+/**
+ * A throwaway company of its own: the line cap is company-wide, so dispatcher tests must not share
+ * ACME with the in-flight rows other tests (and other test files) leave around while they run.
+ */
+async function makeCompany(lines: number | null = 2) {
+  const { data, error } = await service.from("companies").insert({ name: `M6 test co ${randomInt(0, 99999)}`, concurrency_limit: lines }).select("id").single();
+  if (error) throw error;
+  companies.push(data.id);
+  return data.id as string;
+}
+
+async function makeJob(opts: { hours?: object; limit?: number; title?: string; company?: string } = {}) {
   const { data, error } = await service
     .from("jobs")
     .insert({
-      company_id: ACME,
+      company_id: opts.company ?? ACME,
       title: opts.title ?? "M6 test job",
       jd_text: "test",
       calling_hours: opts.hours ?? ALL_HOURS,
@@ -129,10 +145,12 @@ async function makeJob(opts: { hours?: object; limit?: number; title?: string } 
   return data.id as string;
 }
 
+const companyOf = async (job: string) => ((await service.from("jobs").select("company_id").eq("id", job).single()).data as { company_id: string }).company_id;
+
 async function makeCandidate(job: string, phone = testPhone(), status = "imported") {
   const { data, error } = await service
     .from("candidates")
-    .insert({ company_id: ACME, job_id: job, name: "Rahul Test", phone, source: "csv", status, profile: { resume_note: "3 yrs field sales" } })
+    .insert({ company_id: await companyOf(job), job_id: job, name: "Rahul Test", phone, source: "csv", status, profile: { resume_note: "3 yrs field sales" } })
     .select("id")
     .single();
   if (error) throw error;
@@ -143,7 +161,7 @@ async function makeCall(job: string, patch: Record<string, unknown> = {}) {
   const candidate_id = (patch.candidate_id as string) ?? (await makeCandidate(job));
   const { data, error } = await service
     .from("calls")
-    .insert({ candidate_id, job_id: job, company_id: ACME, state: "queued", due_at: new Date().toISOString(), ...patch })
+    .insert({ candidate_id, job_id: job, company_id: await companyOf(job), state: "queued", due_at: new Date().toISOString(), ...patch })
     .select("*")
     .single();
   if (error) throw error;
@@ -237,6 +255,7 @@ afterAll(async () => {
   }
   if (execIds.length) await service.from("webhook_events").delete().in("bolna_execution_id", execIds);
   if (jobs.length) await service.from("jobs").delete().in("id", jobs); // cascades
+  if (companies.length) await service.from("companies").delete().in("id", companies);
 });
 
 beforeEach(() => {
@@ -501,37 +520,62 @@ describe("dispatcher", () => {
     expect((await handleDispatch(dispatchReq("wrong"))).status).toBe(401);
   });
 
-  it("claims never exceed the job's concurrency limit (10 queued, limit 2), even with parallel dispatchers", async () => {
-    const job = await makeJob({ limit: 2 });
-    for (let i = 0; i < 10; i++) await makeCall(job);
-    const claims = await Promise.all([0, 1, 2].map(() => service.rpc("claim_due_calls", { p_limit: 10, p_job_id: job })));
+  it("claims never exceed the COMPANY's line cap across all its jobs (2 jobs x 5 queued, 2 lines), even with parallel dispatchers", async () => {
+    const co = await makeCompany(2);
+    const jobA = await makeJob({ company: co, limit: 50 });
+    const jobB = await makeJob({ company: co, limit: 50 });
+    for (let i = 0; i < 5; i++) {
+      await makeCall(jobA);
+      await makeCall(jobB);
+    }
+    const claims = await Promise.all([
+      service.rpc("claim_due_calls", { p_limit: 10, p_job_id: jobA }),
+      service.rpc("claim_due_calls", { p_limit: 10, p_job_id: jobB }),
+      service.rpc("claim_due_calls", { p_limit: 10, p_job_id: jobA }),
+      service.rpc("claim_due_calls", { p_limit: 10, p_job_id: jobB }),
+    ]);
     const total = claims.reduce((n, c) => n + ((c.data as unknown[]) ?? []).length, 0);
     expect(total).toBe(2);
-    const again = await service.rpc("claim_due_calls", { p_limit: 10, p_job_id: job });
-    expect(again.data).toHaveLength(0);
-    const { count } = await service.from("calls").select("id", { count: "exact", head: true }).eq("job_id", job).eq("state", "dialing");
+    expect((await service.rpc("claim_due_calls", { p_limit: 10, p_job_id: jobB })).data).toHaveLength(0);
+    const { count } = await service.from("calls").select("id", { count: "exact", head: true }).eq("company_id", co).eq("state", "dialing");
     expect(count).toBe(2);
   });
 
+  it("company lines unset → the server default (p_default_lines) applies; another company's calls are unaffected", async () => {
+    const co = await makeCompany(null);
+    const job = await makeJob({ company: co });
+    for (let i = 0; i < 4; i++) await makeCall(job);
+    const r = await service.rpc("claim_due_calls", { p_limit: 10, p_job_id: job, p_default_lines: 3 });
+    expect(r.data).toHaveLength(3);
+    const other = await makeCompany(1);
+    const job2 = await makeJob({ company: other });
+    await makeCall(job2);
+    expect((await service.rpc("claim_due_calls", { p_limit: 10, p_job_id: job2 })).data).toHaveLength(1);
+  });
+
   it("does not claim outside calling hours or before due_at", async () => {
-    const closed = await makeJob({ hours: { start: "10:00", end: "19:00", days: [] } });
+    const co = await makeCompany(5);
+    const closed = await makeJob({ company: co, hours: { start: "10:00", end: "19:00", days: [] } });
     await makeCall(closed);
     expect((await service.rpc("claim_due_calls", { p_limit: 10, p_job_id: closed })).data).toHaveLength(0);
-    const later = await makeJob();
+    const later = await makeJob({ company: co });
     await makeCall(later, { due_at: new Date(Date.now() + 3_600_000).toISOString() });
     expect((await service.rpc("claim_due_calls", { p_limit: 10, p_job_id: later })).data).toHaveLength(0);
   });
 
   it("SAFETY LOCK: DISPATCH_ENABLED unset → calls blocked, Bolna never contacted", async () => {
     expect(process.env.DISPATCH_ENABLED).toBeUndefined();
-    const job = await makeJob({ limit: 2 });
+    // own company with 2 lines: rows other tests leave in flight cannot change the counts below
+    const job = await makeJob({ company: await makeCompany(2) });
     const a = await makeCall(job, { candidate_id: await makeCandidate(job, "+919000000001") }); // valid-looking Indian mobile
     const b = await makeCall(job);
     const c = await makeCall(job);
-    const r1 = await handleDispatch(dispatchReq(DISPATCH_SECRET, { job_id: job }));
-    expect(await r1.json()).toMatchObject({ started: 0, blocked: 2 });
+    const r1 = (await (await handleDispatch(dispatchReq(DISPATCH_SECRET, { job_id: job }))).json()) as { started: number; blocked: number };
+    expect(r1.started).toBe(0);
+    expect(r1.blocked).toBeGreaterThan(0);
+    expect(r1.blocked).toBeLessThanOrEqual(2); // 2 lines: never more than 2 claimed in one go
     const r2 = await runDispatch({ jobId: job });
-    expect(r2).toMatchObject({ started: 0, blocked: 1, in_flight: 0 });
+    expect(r2).toMatchObject({ started: 0, in_flight: 0 });
     for (const call of [a, b, c]) {
       expect(await getCall(call.id)).toMatchObject({ state: "finished", outcome: "failed", termination_reason: "dispatch_blocked", bolna_execution_id: null });
     }
@@ -540,7 +584,7 @@ describe("dispatcher", () => {
   });
 
   it("SAFETY LOCK: DISPATCH_ENABLED=false or a non-Indian number → blocked, Bolna never contacted", async () => {
-    const job = await makeJob();
+    const job = await makeJob({ company: await makeCompany(2) });
     process.env.DISPATCH_ENABLED = "false";
     const a = await makeCall(job, { candidate_id: await makeCandidate(job, "+919000000002") });
     await runDispatch({ jobId: job });
@@ -557,7 +601,7 @@ describe("dispatcher", () => {
     process.env.DISPATCH_ENABLED = "true";
     const exec = execId();
     bolnaReply = () => new Response(JSON.stringify({ message: "done", status: "queued", execution_id: exec }), { status: 200 });
-    const job = await makeJob();
+    const job = await makeJob({ company: await makeCompany(2) });
     const call = await makeCall(job, { candidate_id: await makeCandidate(job, "+919000000003") });
     const r = await runDispatch({ jobId: job });
     expect(r).toMatchObject({ started: 1, in_flight: 1 });
@@ -578,7 +622,7 @@ describe("dispatcher", () => {
 });
 
 // ===========================================================================
-describe("per-role auth: screen + single-call routes", () => {
+describe("per-role auth: batch + single-call routes", () => {
   let candidateId = "";
   const noKick = vi.fn();
   beforeAll(async () => {
@@ -587,21 +631,21 @@ describe("per-role auth: screen + single-call routes", () => {
 
   it("unauthenticated → 401 everywhere", async () => {
     as(anon);
-    expect((await handleScreen(jsonReq({}), jobId, noKick)).status).toBe(401);
+    expect((await handleCreateBatch(jsonReq({ job_id: jobId }), noKick)).status).toBe(401);
     expect((await handlePhoneCall(jsonReq({ candidate_id: candidateId }), noKick)).status).toBe(401);
     expect((await handleWebSession(jsonReq({ candidate_id: candidateId }))).status).toBe(401);
   });
 
   it("hiring_manager → 403 everywhere", async () => {
     as(acmeHm);
-    expect((await handleScreen(jsonReq({}), jobId, noKick)).status).toBe(403);
+    expect((await handleCreateBatch(jsonReq({ job_id: jobId }), noKick)).status).toBe(403);
     expect((await handlePhoneCall(jsonReq({ candidate_id: candidateId }), noKick)).status).toBe(403);
     expect((await handleWebSession(jsonReq({ candidate_id: candidateId }))).status).toBe(403);
   });
 
   it("other company's admin is blocked (404, nothing created)", async () => {
     as(otherAdmin);
-    expect((await handleScreen(jsonReq({}), jobId, noKick)).status).toBe(404);
+    expect((await handleCreateBatch(jsonReq({ job_id: jobId }), noKick)).status).toBe(404);
     expect((await handlePhoneCall(jsonReq({ candidate_id: candidateId }), noKick)).status).toBe(404);
     expect((await handleWebSession(jsonReq({ candidate_id: candidateId }))).status).toBe(404);
     const { data } = await service.from("calls").select("id").eq("candidate_id", candidateId);
@@ -639,13 +683,13 @@ describe("per-role auth: screen + single-call routes", () => {
     expect((bolnaRequests[0]!.body!.user_data as Record<string, string>).call_id).toBe(data!.id);
   });
 
-  it("admin: screen queues imported candidates and kicks the dispatcher", async () => {
+  it("admin: a batch queues imported candidates and kicks the dispatcher straight away", async () => {
     as(acmeAdmin);
     const job = await makeJob();
     await makeCandidate(job);
     await makeCandidate(job);
-    const res = await handleScreen(jsonReq({}), job, noKick);
-    expect(res.status).toBe(200);
+    const res = await handleCreateBatch(jsonReq({ job_id: job }), noKick);
+    expect(res.status).toBe(201);
     expect(await res.json()).toMatchObject({ queued: 2 });
     expect(noKick).toHaveBeenCalledWith(job);
     const { count } = await service.from("calls").select("id", { count: "exact", head: true }).eq("job_id", job).eq("state", "queued");

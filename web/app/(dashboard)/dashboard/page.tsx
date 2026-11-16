@@ -3,6 +3,9 @@ import { Suspense } from "react";
 import { canEdit, getMembership } from "@/components/server/session";
 import { loadDashboard, loadJobs } from "@/components/dashboard/load";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { BiasAlert } from "@/components/fairness/bias-alert";
+import { loadBiasSummary } from "@/components/fairness/server/load";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Dashboard · Pingo" };
 
@@ -33,7 +36,14 @@ async function DashboardContent({ searchParams }: { searchParams: PageProps<"/da
       />
     );
   }
-  return <DashboardView data={data} canEdit={canEdit(me.role)} />;
+  const bias = await loadBiasSummary(await createClient(), data.job.id).catch(() => null);
+  return (
+    <DashboardView
+      data={data}
+      canEdit={canEdit(me.role)}
+      fairness={bias ? <BiasAlert summary={bias} href={`/fairness?job=${data.job.id}`} /> : null}
+    />
+  );
 }
 
 function EmptyState({ title, body, action }: { title: string; body: string; action?: { href: string; label: string } }) {

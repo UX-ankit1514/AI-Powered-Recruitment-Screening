@@ -1,8 +1,21 @@
 /**
  * Pure scoring maths shared by server and client (no server imports, no I/O).
- * Overall = weighted mean of the SCORED qualities (weights renormalised over qualities with a score),
- * mapped from 1–5 to 0–100 as (avg − 1) / 4 × 100. Pick cut-offs: Amazing ≥80, Good ≥65, Maybe ≥45, else No.
- * A failed must-have or a short exit caps the pick at Maybe.
+ *
+ * Overall (0–100) = weighted mean of the SCORED qualities with the rubric weights (renormalised over
+ * qualities that have a score; "not covered" qualities are excluded, never penalised), mapped from
+ * 1–5 to 0–100 as (avg − 1) / 4 × 100.
+ *
+ * Since eval-v1 each stored quality score already folds in the job's requirements mapped to it
+ * (lib/ai/evaluate.ts → foldQuality):
+ *     quality_q = Σ w·s / Σ w over { direct score of q (w = 2) } ∪ { requirement r with r.quality = q, except logistics (w = 3 must · 2 core · 1 nice) }
+ * so the overall is requirement-weighted JD fit and rubric preference in one number, still re-weighted
+ * instantly at read time.
+ *
+ * JD fit (0–100, shown separately) = computeJdFit: Σ w_r·s_r / Σ w_r over SCORED requirements
+ * (w = 3 must · 2 core · 1 nice), mapped the same way.
+ *
+ * Pick cut-offs (unchanged): Amazing ≥80, Good ≥65, Maybe ≥45, else No. A failed must-have or a short
+ * exit caps the pick at Maybe.
  */
 
 export const PRESET_QUALITY_KEYS = [
@@ -74,3 +87,30 @@ export function pickFor(overall: number | null | undefined, flags?: PickFlags | 
 }
 
 export const PICK_LABELS: Record<PickValue, string> = { amazing: "Amazing", good: "Good", maybe: "Maybe", no: "No" };
+
+export type RequirementScoreLike = { score?: number | null; importance?: string | null } | null | undefined;
+const REQ_WEIGHT: Record<string, number> = { must: 3, core: 2, nice: 1 };
+
+/** JD fit 0–100 from requirement scores (importance-weighted, unscored excluded). Null when nothing scored. */
+export function computeJdFit(reqs: Record<string, RequirementScoreLike> | null | undefined): number | null {
+  if (!reqs) return null;
+  let sum = 0;
+  let wsum = 0;
+  for (const r of Object.values(reqs)) {
+    const s = validScore({ score: r?.score });
+    if (s === null) continue;
+    const w = REQ_WEIGHT[String(r?.importance ?? "core")] ?? 2;
+    sum += s * w;
+    wsum += w;
+  }
+  if (!wsum) return null;
+  return Math.round(Math.min(100, Math.max(0, ((sum / wsum - 1) / 4) * 100)));
+}
+
+export type RequirementStatus = "met" | "partial" | "not_met" | "not_covered";
+
+/** Anchor 3 = meets the bar. ≥3 met · ≥2 partial · below not met · null not covered. */
+export function requirementStatus(score: number | null | undefined): RequirementStatus {
+  if (typeof score !== "number" || !Number.isFinite(score)) return "not_covered";
+  return score >= 3 ? "met" : score >= 2 ? "partial" : "not_met";
+}

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getPublicJob } from "@/lib/ingest/public-job";
 import { otpMode } from "@/lib/messaging/provider";
 import { ApplyForm } from "./apply-form";
+import { ApplyUnavailable } from "../unavailable";
 
 export const metadata = { title: "Apply · Pingo", robots: { index: false } };
 
@@ -29,14 +30,7 @@ async function ApplyBody({ params }: { params: PageProps<"/apply/[jobId]">["para
   const { jobId } = await params;
   const job = await getPublicJob(jobId);
 
-  if (!job) {
-    return (
-      <div className="rounded-lg border border-line bg-surface p-6 shadow-card">
-        <h1 className="mb-2 text-[22px] font-semibold tracking-tight">This job is not open</h1>
-        <p className="text-text-2">The link may be old, or the role has been filled. Check with the company for a current link.</p>
-      </div>
-    );
-  }
+  if (!job) return <ApplyUnavailable framed={false} />;
 
   return (
     <div className="rounded-lg border border-line bg-surface p-6 shadow-card sm:p-7">

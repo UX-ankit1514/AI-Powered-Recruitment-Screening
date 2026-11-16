@@ -2,10 +2,12 @@
 
 import { useRef, useState } from "react";
 import { PhoneVerify } from "@/lib/messaging/phone-verify";
+import { SCRIPT_INTEGRITY } from "@/components/jobs/extract-text";
 
 // Resume text is read in the browser (same readers as /demo), so the server stays dependency-free.
-const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
-const MAMMOTH = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+// jsDelivr is the only script CDN the CSP allows (see components/jobs/extract-text.ts).
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/";
+const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js";
 const MAX_BYTES = 10 * 1024 * 1024;
 
 type PdfLib = {
@@ -25,6 +27,8 @@ function loadScript(src: string) {
     const s = document.createElement("script");
     s.src = src;
     s.async = true;
+    s.crossOrigin = "anonymous";
+    if (SCRIPT_INTEGRITY[src]) s.integrity = SCRIPT_INTEGRITY[src];
     s.onload = () => ok();
     s.onerror = () => {
       delete loaded[src];

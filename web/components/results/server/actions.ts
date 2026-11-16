@@ -5,12 +5,15 @@ import "server-only";
  *  - shortlist / reject / override / move_to_job: admin or recruiter only
  * Authorisation is checked here AND enforced again by RLS on every write.
  * Overrides are stored only as actions, so a later re-score never erases them.
+ * Rejecting cancels the candidate's waiting calls (booked callbacks included: a human decided);
+ * the reject action records how many were cancelled.
  */
 import { z } from "zod";
 import type { Json } from "@/lib/database.types";
 import { PICKS } from "@/components/results/model";
 import { UUID_RE, canWrite, json, jsonError, roleIn, type Db } from "./auth";
 import { createClient } from "@/lib/supabase/server";
+import { cancelQueuedCalls } from "@/lib/calls/cancel";
 
 const Body = z.discriminatedUnion("type", [
   z.object({ type: z.literal("note"), note: z.string().trim().min(1).max(2000) }),
@@ -97,12 +100,17 @@ export async function handleCandidateAction(req: Request, candidateId: string): 
     }
     const { error } = await db.from("candidates").update({ status: next }).eq("id", cand.id);
     if (error) return jsonError(error.code === "42501" ? 403 : 400, "Could not update the candidate");
+    let cancelled = 0;
+    if (body.type === "reject" && !undo) {
+      cancelled = (await cancelQueuedCalls(db, { candidateId: cand.id }, { includeCallbacks: true })).cancelled;
+    }
+    const auto = cancelled ? `${cancelled} waiting call${cancelled === 1 ? "" : "s"} cancelled` : null;
     return insertAction(db, {
       ...base,
       type: body.type,
       old_value: { status: cand.status },
-      new_value: { status: next, ...(undo ? { undo: true } : {}) },
-      note: body.note ?? null,
+      new_value: { status: next, ...(undo ? { undo: true } : {}), ...(cancelled ? { cancelled_calls: cancelled } : {}) },
+      note: [body.note, auto].filter(Boolean).join(" · ") || null,
     });
   }
 

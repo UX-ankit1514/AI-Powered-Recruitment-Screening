@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
-import { IconDashboard, IconJob, IconPeople, IconPhone, IconSettings, IconStar } from "@/components/icons";
+import { IconDashboard, IconJob, IconPeople, IconPhone, IconScale, IconSettings, IconStar } from "@/components/icons";
 
 const ITEMS = [
   { href: "/dashboard", label: "Dashboard", Icon: IconDashboard, match: ["/dashboard"] },
@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/candidates", label: "Candidates", Icon: IconPeople, match: ["/candidates"] },
   { href: "/calls", label: "Calls", Icon: IconPhone, match: ["/calls"] },
   { href: "/hidden", label: "Hidden fits", Icon: IconStar, match: ["/hidden", "/talent-pool", "/hidden-fits"] },
+  { href: "/fairness", label: "Fairness", Icon: IconScale, match: ["/fairness"] },
   { href: "/settings", label: "Settings", Icon: IconSettings, match: ["/settings"] },
 ] as const;
 

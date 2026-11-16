@@ -7,18 +7,16 @@ import {
   PICK_LABEL,
   PICK_ORDER,
   callText,
-  computeOverall,
   formatInt,
   formatCallCost,
-  hasFailedMustHave,
   initials,
   isHiddenFit,
   mmss,
-  pickFor,
   sourceLabel,
   type PickValue,
 } from "@/components/candidate-format";
 import { IconSearch } from "@/components/icons";
+import { evaluate } from "@/components/results/model";
 import type { DashCandidate, DashboardData, LiveCall } from "./load";
 
 type Ranked = {
@@ -26,6 +24,8 @@ type Ranked = {
   overall: number | null;
   pick: PickValue | null;
   capped: string | null;
+  /** The team changed the pick by hand. */
+  changed: boolean;
   atsOff: boolean;
 };
 type Filter = "all" | PickValue | "hidden";
@@ -54,18 +54,16 @@ function rank(cands: DashCandidate[], weights: Record<string, number>): Ranked[]
   return cands
     .map((c) => {
       const atsOff = c.status === "ats_filtered";
-      const overall = c.scored ? computeOverall(c.qualities, weights) : null;
-      const pick = pickFor(overall, { short_exit: c.shortExit, must_have_results: c.mustHaveResults });
-      const uncapped = pickFor(overall);
-      const capped =
-        pick === "maybe" && (uncapped === "amazing" || uncapped === "good")
-          ? c.shortExit
-            ? "call ended early"
-            : hasFailedMustHave({ must_have_results: c.mustHaveResults })
-              ? "must-have not met"
-              : null
-          : null;
-      return { c, overall, pick, capped, atsOff };
+      // Same maths as the ranking page: score × these weights, then the team's override wins.
+      const ev = evaluate(
+        c.scored ? { qualities: c.qualities, must_have_results: c.mustHaveResults, flags: null, summary: c.summary, short_exit: c.shortExit } : null,
+        weights,
+        c.override,
+      );
+      const { overall, pick } = ev;
+      const changed = Boolean(ev.override);
+      const capped = changed ? null : ev.held;
+      return { c, overall, pick, capped, changed, atsOff };
     })
     .sort(
       (a, b) =>
@@ -76,7 +74,7 @@ function rank(cands: DashCandidate[], weights: Record<string, number>): Ranked[]
     );
 }
 
-export function DashboardView({ data, canEdit }: { data: DashboardData; canEdit: boolean }) {
+export function DashboardView({ data, canEdit, fairness }: { data: DashboardData; canEdit: boolean; fairness?: React.ReactNode }) {
   const { job, rubric, candidates, kpi, live } = data;
   const [preset, setPreset] = useState<string>(rubric ? "saved" : "balanced");
   const [filter, setFilter] = useState<Filter>("all");
@@ -293,6 +291,7 @@ export function DashboardView({ data, canEdit }: { data: DashboardData; canEdit:
               HR to review<span className="num">{kpi.hiddenFits.hrReview}</span>
             </Link>
           </div>
+          {fairness}
         </aside>
       </div>
     </>
@@ -300,7 +299,7 @@ export function DashboardView({ data, canEdit }: { data: DashboardData; canEdit:
 }
 
 function Row({ r }: { r: Ranked }) {
-  const { c, overall, pick, capped, atsOff } = r;
+  const { c, overall, pick, capped, changed, atsOff } = r;
   const hook = typeof c.resumeScore === "number" && c.resumeScore < 50 && typeof overall === "number" && overall >= 65;
   const call = callText(c.call);
   return (
@@ -325,7 +324,7 @@ function Row({ r }: { r: Ranked }) {
         ) : pick ? (
           <>
             <span className={`pick ${pick}`}>{PICK_LABEL[pick]}</span>
-            {capped ? <span className="held">Held: {capped}</span> : null}
+            {changed ? <span className="held">Changed by team</span> : capped ? <span className="held">Held: {capped}</span> : null}
           </>
         ) : (
           <span className="status">{STATUS_TEXT[c.status] ?? c.status}</span>

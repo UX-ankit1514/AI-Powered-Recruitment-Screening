@@ -12,7 +12,7 @@ vi.mock("../../lib/supabase/admin", async () => {
   const { adminClient } = await import("../../scripts/seed");
   return { createAdminClient: () => adminClient() };
 });
-vi.mock("../../lib/ai", async (importOriginal) => ({ ...(await importOriginal<typeof import("../../lib/ai")>()), scoreCall: vi.fn() }));
+vi.mock("../../lib/ai", async (importOriginal) => ({ ...(await importOriginal<typeof import("../../lib/ai")>()), scoreCall: vi.fn(), classifyCall: vi.fn(async () => { throw new Error("offline"); }) }));
 
 import { scoreCall } from "../../lib/ai";
 import { processExecution, retryPendingScores, MAX_SCORE_ATTEMPTS } from "../../lib/calls/webhook";

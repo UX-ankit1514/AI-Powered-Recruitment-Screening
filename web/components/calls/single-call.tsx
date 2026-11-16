@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PICK_LABEL, initials, mmss, type PickValue } from "@/components/candidate-format";
 import type { CallOutcome, CallState } from "@/lib/types";
 import { SessionError, startWebCall, type WebCallHandle } from "./bolna-web";
+import { READABLE_ACCEPT, extractText, tidy } from "@/components/jobs/extract-text";
 
 export type CallCandidate = { id: string; name: string; phoneTail: string; status: string };
 
@@ -78,6 +79,8 @@ export function SingleCall({
   const [phone, setPhone] = useState("+91 ");
   const [note, setNote] = useState("");
   const [consent, setConsent] = useState(false);
+  const [resume, setResume] = useState<{ name: string; status: "reading" | "ok" | "error"; text: string; error?: string } | null>(null);
+  const resumeSeq = useRef(0);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -210,6 +213,20 @@ export function SingleCall({
     [router, setStage],
   );
 
+  async function onResume(file: File | undefined) {
+    const seq = ++resumeSeq.current;
+    if (!file) return setResume(null);
+    setResume({ name: file.name, status: "reading", text: "" });
+    try {
+      const t = tidy(await extractText(file)).slice(0, 20_000);
+      if (seq !== resumeSeq.current) return;
+      setResume(t ? { name: file.name, status: "ok", text: t } : { name: file.name, status: "error", text: "", error: "No text found in that file (a scanned image?). You can still call them." });
+    } catch (e) {
+      if (seq !== resumeSeq.current) return;
+      setResume({ name: file.name, status: "error", text: "", error: e instanceof Error ? e.message : "Could not read that file." });
+    }
+  }
+
   async function ensureCandidate(): Promise<CallCandidate | null> {
     setErr("");
     if (mode === "pick") {
@@ -231,11 +248,22 @@ export function SingleCall({
       setErr("Confirm they agreed to be contacted for this job.");
       return null;
     }
+    if (resume?.status === "reading") {
+      setErr("Still reading the resume. Try again in a moment.");
+      return null;
+    }
     const res = await fetch(`/api/jobs/${job.id}/candidates/import`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        rows: [{ name: name.trim(), phone: phone.trim(), ...(note.trim() ? { resume_note: note.trim() } : {}) }],
+        rows: [
+          {
+            name: name.trim(),
+            phone: phone.trim(),
+            ...(note.trim() ? { resume_note: note.trim() } : {}),
+            ...(resume?.status === "ok" ? { resume_text: resume.text } : {}),
+          },
+        ],
         consent_confirmed: true,
       }),
     });
@@ -262,6 +290,7 @@ export function SingleCall({
     setName("");
     setPhone("+91 ");
     setNote("");
+    setResume(null);
     setConsent(false);
     router.refresh();
     return c;
@@ -400,6 +429,19 @@ export function SingleCall({
                 <label htmlFor="nc-note">Short resume note (optional)</label>
                 <textarea id="nc-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. 2 years inside sales at an edtech, B.Com, no SaaS experience" rows={2} />
               </div>
+              <div className="f full">
+                <label htmlFor="nc-resume">Resume (optional)</label>
+                <input id="nc-resume" type="file" accept={READABLE_ACCEPT} onChange={(e) => void onResume(e.target.files?.[0])} aria-describedby="nc-resume-note" />
+                <small id="nc-resume-note" className={resume?.status === "error" ? "bp-bad-inline" : "label"} aria-live="polite">
+                  {!resume
+                    ? "PDF, Word or text. Pingo reads it to score the resume and ask about it on the call. The file stays on this computer."
+                    : resume.status === "reading"
+                      ? `Reading ${resume.name}…`
+                      : resume.status === "ok"
+                        ? `${resume.name} read. The interviewer will ask about it.`
+                        : resume.error}
+                </small>
+              </div>
               <label className="chk full">
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
                 <span>
@@ -428,10 +470,10 @@ export function SingleCall({
           ) : null}
 
           <div className="btnrow" style={{ marginTop: 16 }}>
-            <button className="btn" type="button" onClick={talkInBrowser} disabled={busy || !canCall}>
+            <button className="btn" type="button" onClick={talkInBrowser} disabled={busy || !canCall || (mode === "new" && resume?.status === "reading")}>
               Talk in browser
             </button>
-            <button className="btn2" type="button" onClick={callPhone} disabled={busy || !canCall}>
+            <button className="btn2" type="button" onClick={callPhone} disabled={busy || !canCall || (mode === "new" && resume?.status === "reading")}>
               Call phone
             </button>
           </div>

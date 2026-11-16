@@ -42,7 +42,7 @@ const ROUTE_MODULES = import.meta.glob<Mod>("../../app/api/**/route.ts");
 let cast: Cast;
 let fx: { jobId: string; candidateId: string; batchId: string };
 let eraseCandidateId = ""; // a second candidate the admin is allowed to erase
-const savedRetention: Record<string, { retention_recording_days: number; retention_transcript_days: number }> = {};
+const savedRetention: Record<string, { retention_recording_days: number; retention_transcript_days: number; concurrency_limit: number | null }> = {};
 const jobs: string[] = [];
 const as = (c: DB | null) => {
   h.client = c;
@@ -80,8 +80,11 @@ const CASES: Case[] = [
     body: () => ({ rows: [{ name: "Intruder", phone: "+15550190000" }], consent_confirmed: true }),
     expect: WRITE,
   },
-  { route: "jobs/[id]/ats/apply", method: "POST", params: () => ({ id: fx.jobId }), body: () => ({}), expect: WRITE },
-  { route: "jobs/[id]/screen", method: "POST", params: () => ({ id: fx.jobId }), body: () => ({}), expect: WRITE },
+  // closing works for admin/recruiter (tests/calls/execution-fixes.test.ts); refused here
+  { route: "jobs/[id]/close", method: "POST", params: () => ({ id: fx.jobId }), body: () => ({}), expect: WRITE },
+  // role profile (admin/recruiter writes covered in tests/eval/role-profile-routes.test.ts)
+  { route: "jobs/[id]/role-profile", method: "PUT", params: () => ({ id: fx.jobId }), body: () => ({}), expect: WRITE },
+  { route: "jobs/[id]/role-profile/generate", method: "POST", params: () => ({ id: fx.jobId }), body: () => ({}), expect: WRITE },
   { route: "jobs/[id]/ranking", method: "GET", params: () => ({ id: fx.jobId }), expect: READ },
   // export is a read, but restricted to admin/recruiter (candidate PII in bulk)
   { route: "jobs/[id]/export", method: "GET", params: () => ({ id: fx.jobId }), expect: { anon: 401, hm: 403, other: 404, recruiter: 200 } },
@@ -121,6 +124,13 @@ const CASES: Case[] = [
     method: "PUT",
     body: () => ({ recording_days: 90, transcript_days: 365 }),
     // other company's admin succeeds but only ever changes its OWN company (scoped by membership)
+    expect: { anon: 401, hm: 403, recruiter: 403, other: 200, admin: 200 },
+  },
+  // ---- call lines (company-wide, admin only) ----
+  {
+    route: "settings/lines",
+    method: "PUT",
+    body: () => ({ lines: 3 }),
     expect: { anon: 401, hm: 403, recruiter: 403, other: 200, admin: 200 },
   },
   // ---- fairness + messaging ----
@@ -174,7 +184,7 @@ beforeAll(async () => {
   if (e.error) throw e.error;
   eraseCandidateId = e.data.id as string;
   for (const id of [ACME, OTHER]) {
-    const { data } = await svc.from("companies").select("retention_recording_days, retention_transcript_days").eq("id", id).single();
+    const { data } = await svc.from("companies").select("retention_recording_days, retention_transcript_days, concurrency_limit").eq("id", id).single();
     if (data) savedRetention[id] = data as (typeof savedRetention)[string];
   }
 });
@@ -220,8 +230,8 @@ describe.each(CASES.filter((c) => !c.public))("$method /api/$route", (c) => {
 describe("writes refused above leave no trace", () => {
   it("job title, rubric versions, candidate status, batch status and calls are unchanged", async () => {
     const svc = service();
-    const { data: job } = await svc.from("jobs").select("title").eq("id", fx.jobId).single();
-    expect(job?.title).toBe("M9 matrix job");
+    const { data: job } = await svc.from("jobs").select("title, status").eq("id", fx.jobId).single();
+    expect(job).toEqual({ title: "M9 matrix job", status: "open" });
     const { data: rubrics } = await svc.from("rubrics").select("version").eq("job_id", fx.jobId);
     expect(rubrics?.map((r) => r.version)).toEqual([1]);
     const { data: cands } = await svc.from("candidates").select("name, status").eq("job_id", fx.jobId);

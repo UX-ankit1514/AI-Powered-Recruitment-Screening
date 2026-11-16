@@ -119,13 +119,17 @@ export const CallBriefSchema = z.object({
   culture_values: z.string(),
   traits: z.string(),
   other_interest_prompt: z.string(),
+  /** eval-v1: compressed ordered question plan and the company's other open roles. */
+  interview_plan: z.string().default(""),
+  open_roles: z.string().default(""),
 });
 export type CallBrief = z.infer<typeof CallBriefSchema>;
 
 // ---------- scoreCall ----------
 export const QuoteSchema = z.object({ text: z.string().min(1), ts: z.union([z.number(), z.string()]).nullable() });
 export const QualityResultSchema = z.object({
-  score: z.number().int().min(1).max(5).nullable(),
+  /** 1–5; may be fractional (mean of two scoring passes, folded with mapped requirements). */
+  score: z.number().min(1).max(5).nullable(),
   reason: z.string(),
   quotes: z.array(QuoteSchema),
 });
@@ -133,6 +137,9 @@ export const MustHaveResultSchema = z.object({
   text: z.string(),
   met: z.union([z.boolean(), z.literal("unknown")]),
   quote: z.string().nullable(),
+  /** eval-v1: the must-have check id and adjudication (met | not_met | unclear). */
+  id: z.string().optional(),
+  status: z.enum(["met", "not_met", "unclear"]).optional(),
 });
 export const FlagsSchema = z.object({
   other_role: z.object({ job_id: z.string().nullable(), title: z.string(), reason: z.string() }).nullable(),
@@ -152,7 +159,56 @@ export const ScoreCallResultSchema = z.object({
   callback_requested_at: z.iso.datetime({ offset: true }).nullable(),
   model_version: z.string(),
   prompt_version: z.string(),
+  // ---- eval-v1 (multi-pass) additions; optional so older results still validate ----
+  call_class: z.enum(["conversation", "voicemail", "wrong_person", "no_speech", "dropped"]).optional(),
+  call_class_reason: z.string().optional(),
+  requirement_scores: z.record(z.string(), z.lazy(() => RequirementScoreSchema)).optional(),
+  coverage: z.record(z.string(), z.enum(["asked_answered", "asked_weak", "not_asked"])).optional(),
+  agreement: z.lazy(() => AgreementSchema).optional(),
+  jd_fit: z.lazy(() => JdFitSchema).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  needs_review: z.boolean().optional(),
+  language_mix: z.enum(["english", "hinglish", "other"]).nullable().optional(),
+  role_profile_version: z.number().int().optional(),
 });
+export const RequirementScoreSchema = z.object({
+  text: z.string(),
+  importance: z.enum(["must", "core", "nice"]),
+  quality: z.string(),
+  score: z.number().min(1).max(5).nullable(),
+  pass_scores: z.tuple([z.number().nullable(), z.number().nullable()]),
+  justification: z.string(),
+  quotes: z.array(QuoteSchema),
+  status: z.enum(["met", "partial", "not_met", "not_covered"]),
+});
+export const AgreementSchema = z.object({
+  passes: z.number().int(),
+  max_diff: z.number(),
+  agreement_rate: z.number().min(0).max(1),
+  disagreements: z.array(z.object({ id: z.string(), a: z.number().nullable(), b: z.number().nullable(), note: z.string() })),
+});
+export const JdFitSchema = z.object({
+  fit_pct: z.number().nullable(),
+  requirements: z.array(
+    z.object({
+      id: z.string(),
+      text: z.string(),
+      importance: z.enum(["must", "core", "nice"]),
+      status: z.enum(["met", "partial", "not_met", "not_covered"]),
+      score: z.number().nullable(),
+      quote: z.string().nullable(),
+      justification: z.string(),
+    }),
+  ),
+  strengths: z.array(z.string()),
+  gaps: z.array(z.string()),
+  hidden_fits: z.array(z.object({ job_id: z.string().nullable(), title: z.string(), reason: z.string() })),
+  rationale: z.string(),
+  not_covered: z.array(z.string()),
+});
+export type RequirementScore = z.infer<typeof RequirementScoreSchema>;
+export type Agreement = z.infer<typeof AgreementSchema>;
+export type JdFit = z.infer<typeof JdFitSchema>;
 export type ScoreCallResult = z.infer<typeof ScoreCallResultSchema>;
 export type QualityResult = z.infer<typeof QualityResultSchema>;
 

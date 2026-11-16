@@ -7,7 +7,7 @@ Verified against Bolna docs (docs MCP) and the live API on 2026-11-15.
 |---|---|
 | App agent id | `e155c924-5640-467a-b216-1bb44240497e` (also in `app-agent-id.txt`) — use as `BOLNA_AGENT_ID` in `/web` |
 | Demo agent (DO NOT TOUCH) | `dbec7633-7b93-49e5-bca5-5636bd047ae4` "Aditi" — `prompt.txt` / `agent.json` stay its source of truth |
-| Prompt | `app-prompt.txt` (demo prompt + `{{call_id}}`, `{{faq}}`, `{{culture_values}}`, FAQ-only answers, truthful callback booking) |
+| Prompt | `app-prompt.txt` (demo prompt + `{{call_id}}`, `{{faq}}`, `{{culture_values}}`, FAQ-only answers, truthful callback booking, and since 2026-11-16 the per-candidate `{{interview_plan}}`, `{{traits}}`, `{{open_roles}}`) |
 | Full config (secrets redacted) | `app-agent.json` |
 | Function schema (secrets redacted) | `app-functions.json` |
 
@@ -34,8 +34,11 @@ Every key below should be sent on every call (send `""` rather than omitting; th
 | `must_haves` | bullet text, one per line |
 | `culture_values` | bullet text, `- Name: description` per line |
 | `faq` | Q/A text, `Q: ... A: ...` per line. Aditi answers company questions ONLY from this. Empty = she defers everything to the hiring team. |
+| `interview_plan` | ordered, numbered question plan built from the job's role profile + the candidate's resume (`web/lib/ai/interview-plan.ts`, ≤ 2200 chars). Tags: `[MUST]` must-have (cover by the ~3 min checkpoint), `[CORE]` core requirement, `[QUALITY]` weighted rubric quality, `[TRAIT]` custom trait, `[IF TIME]` nice-to-have, `[OBSERVE]` no question. Lines may carry "Follow-up if vague: …" and a private note in brackets. Never read aloud. Empty = plain call flow. |
+| `traits` | custom traits, `- Name: description` per line (Aditi asks about each) |
+| `open_roles` | the company's other open roles, `- Title` per line (asked in beyond-this-role); empty = generic "open to other roles?" |
 
-(`traits` and `other_interest_prompt` from build-spec §5 are not used by this prompt; sending them is harmless.)
+(`other_interest_prompt` is still sent for compatibility; the prompt now uses `open_roles`.)
 
 ## 2. Start a phone call
 
@@ -110,7 +113,7 @@ Rules from the docs:
 | who hung up | `telephony_data.hangup_by`, `telephony_data.hangup_reason`, `telephony_data.hangup_provider_code` |
 | numbers | `user_number` / `agent_number` (mirrors `telephony_data.to_number` / `from_number`) |
 | our variables back | `context_details.recipient_data` (contains the `user_data` we sent → `call_id` lives here; use it as a fallback join if `execution_id` wasn't stored) |
-| voicemail | `answered_by_voice_mail` (detection is off on this agent; rely on `termination_reason = voicemail_reached`) |
+| voicemail | `answered_by_voice_mail` + `termination_reason = voicemail_reached`. Bolna voicemail detection is ON for this agent since 2026-11-16 (`task_config.voicemail: true`, detection window 30 s). The app also classifies every transcript (voicemail / wrong person / no speech / dropped are never scored and are retried). |
 | timing | `created_at`, `initiated_at`, `updated_at` |
 | function calls | NOT in payload (`tool_call_logs` is always `[]`) → the reschedule endpoint must persist bookings itself |
 | latency | `latency_data.time_to_first_audio` (ms) |
@@ -193,3 +196,7 @@ Prompt behaviour on top of this: Aditi offers up to 3 listed slots, books only a
 
 - Agent created (201) and fetched back: config, prompt, webhook and function match; demo agent untouched (same `updated_at`, no webhook).
 - One web-call session minted for the new agent (200). No phone calls placed. The 5 scenario test calls (M4 "done when") and a real `sample-webhook.json` are still to do, once `/api/webhooks/bolna` and `/api/bolna/reschedule` are deployed.
+
+## 7. Change log
+
+- 2026-11-16: prompt updated to follow `{{interview_plan}}` (cover plan items naturally, skip what's answered, one follow-up on vague answers, ask custom `{{traits}}`, name `{{open_roles}}`, wrap at ~9 min dropping `[IF TIME]` first) and to hang up at once on voicemail/operator messages; pushed with `PATCH /v2/agent/{id}` (200). Voicemail detection enabled with a full `PUT /v2/agent/{id}` built from the live config (200); a deep diff before/after showed only `tasks[0].task_config.voicemail` changed. Demo agent untouched (identical config and `updated_at`).

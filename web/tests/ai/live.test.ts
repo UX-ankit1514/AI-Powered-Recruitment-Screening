@@ -3,7 +3,7 @@
  * skipped automatically when no key is available.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { parse } from "dotenv";
 
 vi.mock("server-only", () => ({}));
@@ -13,6 +13,7 @@ import { readResume } from "../../lib/ai/read-resume";
 import { ScoreCallResultSchema, ReadResumeResultSchema } from "../../lib/ai/schemas";
 import { computeOverall, pickFor } from "../../lib/ai/scoring-math";
 import { INJECTION_LINES, WEAK_TRANSCRIPT } from "./fixtures";
+import { liveSkipReason } from "./live-gate";
 
 const ENV_FILE = process.env.AI_ENV_FILE ?? "/Users/shubhgoel/Desktop/shubhpersonal/highrefine/.env.local";
 if (!process.env.AI_API_KEY && existsSync(ENV_FILE)) {
@@ -33,7 +34,14 @@ const base = {
 };
 
 describe.skipIf(!live)("live gateway", () => {
-  it("scoreCall on a short fixture returns a schema-valid result", { timeout: 180_000 }, async () => {
+  let skip: string | null = null;
+  beforeAll(async () => {
+    skip = await liveSkipReason();
+    if (skip) console.info(`[live] skipping: ${skip}`);
+  });
+
+  it("scoreCall on a short fixture returns a schema-valid result", { timeout: 600_000 }, async (ctx) => {
+    if (skip) return ctx.skip();
     const clean = await scoreCall({ ...base, transcript: WEAK_TRANSCRIPT });
     expect(ScoreCallResultSchema.safeParse(clean).success).toBe(true);
     expect(Object.keys(clean.qualities)).toEqual(
@@ -54,7 +62,8 @@ describe.skipIf(!live)("live gateway", () => {
     console.info(`[live] clean pick=${pick} injected pick=${injectedPick} hr_review=${injected.flags.hr_review ?? "none"}`);
   });
 
-  it("readResume returns profile, paper score and 2 questions", { timeout: 90_000 }, async () => {
+  it("readResume returns profile, paper score and 2 questions", { timeout: 90_000 }, async (ctx) => {
+    if (skip) return ctx.skip();
     const out = await readResume(
       "Rohan Mehta. B.Com, Delhi University 2026. Internship: 2 months social media at a local bakery. Skills: Excel, Canva. Languages: Hindi, English.",
       { must_haves: ["2+ years of B2B sales experience"] },

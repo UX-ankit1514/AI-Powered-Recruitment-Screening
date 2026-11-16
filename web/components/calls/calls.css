@@ -469,6 +469,117 @@
   color: var(--color-red);
   margin-top: 10px;
 }
+.bp-res {
+  margin-top: 16px;
+  border: 1px dashed var(--color-line-strong);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--color-bg);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.bp-res.over {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.bp-res-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+.bp-res-top small {
+  display: block;
+  max-width: 68ch;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--color-text-3);
+}
+.bp-res input[type="file"] {
+  font-size: 13px;
+  max-width: 100%;
+}
+.bp-res input[type="file"]::file-selector-button {
+  font: 600 13px var(--font-sans);
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 9px;
+  padding: 6px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.bp-res-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.bp-res-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.bp-res-list li > span:first-child {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.bp-bad-inline {
+  font-size: 12.5px;
+  color: var(--color-red);
+}
+.bp-res-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.bp-res-cell .chip {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+.bp-res-cell select {
+  max-width: 180px;
+  padding: 4px 8px;
+  font-size: 12.5px;
+}
+.bp-attach {
+  position: relative;
+}
+.bp-attach:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.bp-stop {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+.bp-stop p {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--color-text-2);
+  max-width: 72ch;
+}
+.bp-stop .chk {
+  margin-top: 10px;
+}
+.bp-stop .btnrow {
+  margin-top: 14px;
+}
 .bp-prog {
   margin-top: 16px;
   display: flex;

@@ -10,8 +10,11 @@
  * Truthfulness rules: nothing is sent while calling is paused (DISPATCH_ENABLED), outside the
  * job's calling hours, for closed jobs, or once a human has decided on the candidate. Only first
  * attempts that are not already a booked callback get one, and only when the call is due soon.
+ * "Call now" single calls (heads_up = false) never get one: they are dialled straight away.
+ * After a heads-up goes out the call is held for at least 2 minutes, so the candidate reads it
+ * before the phone rings (batch calls are also queued 2 minutes ahead for the same reason).
  */
-import { appBaseUrl, dispatchEnabled } from "../calls/config";
+import { HEADS_UP_LEAD_MS, appBaseUrl, dispatchEnabled } from "../calls/config";
 import { safeEqual } from "../calls/secret";
 import { inCallingHours, type CallingHours } from "../calls/slots";
 import { createAdminClient } from "../supabase/admin";
@@ -44,12 +47,13 @@ export async function sendHeadsUp(callId: string, opts: { db?: AnyDb; now?: Date
 
   const { data: call } = await db
     .from("calls")
-    .select("id, company_id, job_id, candidate_id, state, call_kind, attempt, scheduled, due_at, created_at")
+    .select("id, company_id, job_id, candidate_id, state, call_kind, attempt, scheduled, heads_up, due_at, created_at")
     .eq("id", callId)
     .maybeSingle();
   if (!call) return { status: "skipped", reason: "not_found" };
   if (call.state !== "queued" || call.call_kind !== "phone") return { status: "skipped", reason: "not_queued" };
   if (call.attempt !== 1 || call.scheduled) return { status: "skipped", reason: "not_first_attempt" };
+  if (call.heads_up === false) return { status: "skipped", reason: "call_now" };
   if (now.getTime() - Date.parse(call.created_at) > MAX_AGE_MS) return { status: "skipped", reason: "too_old" };
   if (Date.parse(call.due_at) - now.getTime() > DUE_SOON_MS) return { status: "skipped", reason: "not_due_soon" };
 
@@ -76,6 +80,9 @@ export async function sendHeadsUp(callId: string, opts: { db?: AnyDb; now?: Date
   });
   if (res.status === "duplicate") return { status: "skipped", reason: "already_sent" };
   if (res.status === "error") return { status: "failed", reason: "store_failed" };
+  // Give the candidate time to read it: never dial sooner than 2 minutes after the message.
+  const earliest = new Date(Date.now() + HEADS_UP_LEAD_MS).toISOString();
+  await db.from("calls").update({ due_at: earliest }).eq("id", call.id).eq("state", "queued").lt("due_at", earliest);
   return { status: res.status };
 }
 
@@ -94,6 +101,7 @@ export async function runSweep(opts: { db?: AnyDb; now?: Date; jobId?: string } 
     .eq("call_kind", "phone")
     .eq("attempt", 1)
     .eq("scheduled", false)
+    .eq("heads_up", true)
     .gte("created_at", new Date(now.getTime() - MAX_AGE_MS).toISOString())
     .lte("due_at", new Date(now.getTime() + DUE_SOON_MS).toISOString())
     .order("due_at", { ascending: true })

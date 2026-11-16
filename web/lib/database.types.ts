@@ -53,6 +53,13 @@ export type Database = {
             foreignKeyName: "actions_candidate_id_company_id_fkey"
             columns: ["candidate_id", "company_id"]
             isOneToOne: false
+            referencedRelation: "bias_inputs"
+            referencedColumns: ["candidate_id", "company_id"]
+          },
+          {
+            foreignKeyName: "actions_candidate_id_company_id_fkey"
+            columns: ["candidate_id", "company_id"]
+            isOneToOne: false
             referencedRelation: "candidate_ranking"
             referencedColumns: ["candidate_id", "company_id"]
           },
@@ -235,6 +242,13 @@ export type Database = {
             foreignKeyName: "calls_candidate_id_company_id_fkey"
             columns: ["candidate_id", "company_id"]
             isOneToOne: false
+            referencedRelation: "bias_inputs"
+            referencedColumns: ["candidate_id", "company_id"]
+          },
+          {
+            foreignKeyName: "calls_candidate_id_company_id_fkey"
+            columns: ["candidate_id", "company_id"]
+            isOneToOne: false
             referencedRelation: "candidate_ranking"
             referencedColumns: ["candidate_id", "company_id"]
           },
@@ -334,6 +348,8 @@ export type Database = {
           faq: Json
           id: string
           name: string
+          retention_recording_days: number
+          retention_transcript_days: number
         }
         Insert: {
           created_at?: string
@@ -341,6 +357,8 @@ export type Database = {
           faq?: Json
           id?: string
           name: string
+          retention_recording_days?: number
+          retention_transcript_days?: number
         }
         Update: {
           created_at?: string
@@ -348,6 +366,8 @@ export type Database = {
           faq?: Json
           id?: string
           name?: string
+          retention_recording_days?: number
+          retention_transcript_days?: number
         }
         Relationships: []
       }
@@ -445,6 +465,259 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          call_id: string | null
+          candidate_id: string | null
+          channel: string
+          company_id: string
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          provider: string
+          provider_ref: string | null
+          status: string
+          to: string
+        }
+        Insert: {
+          body: string
+          call_id?: string | null
+          candidate_id?: string | null
+          channel: string
+          company_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          provider: string
+          provider_ref?: string | null
+          status?: string
+          to: string
+        }
+        Update: {
+          body?: string
+          call_id?: string | null
+          candidate_id?: string | null
+          channel?: string
+          company_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          provider?: string
+          provider_ref?: string | null
+          status?: string
+          to?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_call_id_company_id_fkey"
+            columns: ["call_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id", "company_id"]
+          },
+          {
+            foreignKeyName: "messages_candidate_id_company_id_fkey"
+            columns: ["candidate_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "bias_inputs"
+            referencedColumns: ["candidate_id", "company_id"]
+          },
+          {
+            foreignKeyName: "messages_candidate_id_company_id_fkey"
+            columns: ["candidate_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_ranking"
+            referencedColumns: ["candidate_id", "company_id"]
+          },
+          {
+            foreignKeyName: "messages_candidate_id_company_id_fkey"
+            columns: ["candidate_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id", "company_id"]
+          },
+          {
+            foreignKeyName: "messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_rate_limits: {
+        Row: {
+          at: string
+          bucket: string
+          id: number
+          key_hash: string
+        }
+        Insert: {
+          at?: string
+          bucket: string
+          id?: number
+          key_hash: string
+        }
+        Update: {
+          at?: string
+          bucket?: string
+          id?: number
+          key_hash?: string
+        }
+        Relationships: []
+      }
+      phone_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          job_id: string
+          phone_hash: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          job_id: string
+          phone_hash: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          job_id?: string
+          phone_hash?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_otps_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retention_runs: {
+        Row: {
+          actor_id: string | null
+          company_id: string
+          counts: Json
+          id: number
+          kind: string
+          ran_at: string
+          recording_days: number | null
+          transcript_days: number | null
+        }
+        Insert: {
+          actor_id?: string | null
+          company_id: string
+          counts?: Json
+          id?: number
+          kind: string
+          ran_at?: string
+          recording_days?: number | null
+          transcript_days?: number | null
+        }
+        Update: {
+          actor_id?: string | null
+          company_id?: string
+          counts?: Json
+          id?: number
+          kind?: string
+          ran_at?: string
+          recording_days?: number | null
+          transcript_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retention_runs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_profiles: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean
+          job_id: string
+          model_version: string | null
+          must_have_checks: Json
+          prompt_version: string | null
+          quality_anchors: Json
+          requirements: Json
+          source: string
+          version: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          job_id: string
+          model_version?: string | null
+          must_have_checks?: Json
+          prompt_version?: string | null
+          quality_anchors?: Json
+          requirements?: Json
+          source?: string
+          version: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          job_id?: string
+          model_version?: string | null
+          must_have_checks?: Json
+          prompt_version?: string | null
+          quality_anchors?: Json
+          requirements?: Json
+          source?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_profiles_job_id_company_id_fkey"
+            columns: ["job_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
       rubrics: {
         Row: {
           company_id: string
@@ -504,49 +777,76 @@ export type Database = {
       }
       scores: {
         Row: {
+          agreement: Json | null
+          call_class: string | null
           call_id: string
           candidate_id: string
           company_id: string
+          confidence: number | null
+          coverage: Json | null
           created_at: string
           flags: Json
           id: string
+          jd_fit: Json | null
+          language_mix: string | null
           model_version: string | null
           must_have_results: Json
+          needs_review: boolean
           profile_updates: Json | null
           prompt_version: string | null
           qualities: Json
+          requirement_scores: Json | null
+          role_profile_version: number | null
           rubric_version: number
           short_exit: boolean
           summary: string
         }
         Insert: {
+          agreement?: Json | null
+          call_class?: string | null
           call_id: string
           candidate_id: string
           company_id: string
+          confidence?: number | null
+          coverage?: Json | null
           created_at?: string
           flags: Json
           id?: string
+          jd_fit?: Json | null
+          language_mix?: string | null
           model_version?: string | null
           must_have_results: Json
+          needs_review?: boolean
           profile_updates?: Json | null
           prompt_version?: string | null
           qualities: Json
+          requirement_scores?: Json | null
+          role_profile_version?: number | null
           rubric_version: number
           short_exit?: boolean
           summary: string
         }
         Update: {
+          agreement?: Json | null
+          call_class?: string | null
           call_id?: string
           candidate_id?: string
           company_id?: string
+          confidence?: number | null
+          coverage?: Json | null
           created_at?: string
           flags?: Json
           id?: string
+          jd_fit?: Json | null
+          language_mix?: string | null
           model_version?: string | null
           must_have_results?: Json
+          needs_review?: boolean
           profile_updates?: Json | null
           prompt_version?: string | null
           qualities?: Json
+          requirement_scores?: Json | null
+          role_profile_version?: number | null
           rubric_version?: number
           short_exit?: boolean
           summary?: string
@@ -558,6 +858,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "calls"
             referencedColumns: ["id", "company_id"]
+          },
+          {
+            foreignKeyName: "scores_candidate_id_company_id_fkey"
+            columns: ["candidate_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "bias_inputs"
+            referencedColumns: ["candidate_id", "company_id"]
           },
           {
             foreignKeyName: "scores_candidate_id_company_id_fkey"
@@ -586,21 +893,30 @@ export type Database = {
         Row: {
           bolna_execution_id: string | null
           id: number
+          last_error: string | null
           payload: Json | null
+          process_attempts: number
+          processed_at: string | null
           received_at: string
           status: string | null
         }
         Insert: {
           bolna_execution_id?: string | null
           id?: number
+          last_error?: string | null
           payload?: Json | null
+          process_attempts?: number
+          processed_at?: string | null
           received_at?: string
           status?: string | null
         }
         Update: {
           bolna_execution_id?: string | null
           id?: number
+          last_error?: string | null
           payload?: Json | null
+          process_attempts?: number
+          processed_at?: string | null
           received_at?: string
           status?: string | null
         }
@@ -608,6 +924,41 @@ export type Database = {
       }
     }
     Views: {
+      bias_inputs: {
+        Row: {
+          call_id: string | null
+          candidate_id: string | null
+          company_id: string | null
+          duration_s: number | null
+          hr_review: string | null
+          job_id: string | null
+          language_mix: string | null
+          location: string | null
+          must_have_results: Json | null
+          outcome: string | null
+          qualities: Json | null
+          score_id: string | null
+          short_exit: boolean | null
+          source: string | null
+          transcript_for_mix: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidates_job_id_company_id_fkey"
+            columns: ["job_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
       candidate_ranking: {
         Row: {
           call_id: string | null
@@ -660,12 +1011,70 @@ export type Database = {
           job_id: string
         }[]
       }
+      claim_retention_files: {
+        Args: { p_limit?: number }
+        Returns: {
+          bucket: string
+          id: number
+          path: string
+        }[]
+      }
       claim_score_retries: {
         Args: { p_job_id?: string; p_limit?: number; p_max_attempts?: number }
         Returns: {
           attempt: number
           call_id: string
         }[]
+      }
+      claim_unprocessed_webhook_events: {
+        Args: { p_limit?: number; p_max_attempts?: number; p_min_age?: string }
+        Returns: {
+          event_id: number
+          payload: Json
+        }[]
+      }
+      erase_candidate: { Args: { p_candidate_id: string }; Returns: Json }
+      messaging_rate_hit: {
+        Args: {
+          p_bucket: string
+          p_key_hash: string
+          p_limit: number
+          p_window_s: number
+        }
+        Returns: boolean
+      }
+      purge_expired_data: { Args: never; Returns: Json }
+      save_role_profile_version: {
+        Args: {
+          p_job_id: string
+          p_model_version?: string
+          p_must_have_checks: Json
+          p_prompt_version?: string
+          p_quality_anchors: Json
+          p_requirements: Json
+          p_source?: string
+        }
+        Returns: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean
+          job_id: string
+          model_version: string | null
+          must_have_checks: Json
+          prompt_version: string | null
+          quality_anchors: Json
+          requirements: Json
+          source: string
+          version: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "role_profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       save_rubric_version: {
         Args: {
@@ -694,6 +1103,19 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      settle_retention_files: {
+        Args: { p_error?: string; p_ids: number[] }
+        Returns: number
+      }
+      verify_phone_otp: {
+        Args: {
+          p_code_hash: string
+          p_job_id: string
+          p_max?: number
+          p_phone_hash: string
+        }
+        Returns: string
       }
     }
     Enums: {
@@ -871,4 +1293,3 @@ export const Constants = {
     },
   },
 } as const
-

@@ -1,0 +1,228 @@
+/* Role profile panel (job setup). Builds on the job-setup classes in globals.css. */
+.rp {
+  margin-top: 20px;
+  margin-bottom: 72px; /* clear the sticky save bar of the job form */
+}
+.rp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.rp-head .hint {
+  max-width: 64ch;
+}
+.rp-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rp-actions .num {
+  font-family: var(--font-mono);
+}
+.rp-body {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.rp-empty {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--color-sunken);
+  max-width: 72ch;
+}
+.rp-empty p {
+  margin: 0;
+}
+.rp-empty p + p {
+  margin-top: 6px;
+}
+.rp-empty b {
+  font-weight: 600;
+}
+.rp-confirm {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-bg);
+  max-width: 72ch;
+}
+.rp-confirm p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-text-2);
+}
+.rp-confirm-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.rp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-line);
+}
+.rp-list > li {
+  border-bottom: 1px solid var(--color-line);
+}
+.rp-item > summary,
+.rp-qualities > summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 2px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 8px;
+}
+.rp-item > summary::-webkit-details-marker,
+.rp-qualities > summary::-webkit-details-marker {
+  display: none;
+}
+.rp-item > summary::before,
+.rp-qualities > summary::before {
+  content: "";
+  flex: none;
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--color-text-3);
+  border-bottom: 1.5px solid var(--color-text-3);
+  transform: rotate(-45deg);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rp-item[open] > summary::before,
+.rp-qualities[open] > summary::before {
+  transform: rotate(45deg);
+}
+.rp-item > summary:hover .rp-title {
+  color: var(--color-accent-ink);
+}
+.rp-item > summary:focus-visible,
+.rp-qualities > summary:focus-visible {
+  outline: 2px solid var(--color-accent-mid);
+  outline-offset: 2px;
+}
+.rp-qualities > summary {
+  flex-wrap: wrap;
+  padding-left: 0;
+}
+.rp-qualities > summary b {
+  font-weight: 600;
+}
+.rp-imp {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 99px;
+  min-width: 92px;
+  text-align: center;
+  background: var(--color-no-bg);
+  color: var(--color-no-ink);
+}
+.rp-imp.must {
+  background: var(--color-red-bg);
+  color: var(--color-red);
+}
+.rp-imp.core {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+.rp-title {
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  transition: color 0.15s;
+}
+.rp-meta {
+  white-space: nowrap;
+}
+.rp-fields {
+  padding: 4px 0 18px 19px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rp-fields .f + .f {
+  margin-top: 0;
+}
+.rp-row3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.rp-anchors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rp-anchors .flabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-2);
+  margin-bottom: 2px;
+}
+.rp-anchor {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.rp-anchor label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 9px;
+}
+.rp-anchor .num {
+  font: 600 13px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  width: 12px;
+}
+.rp-anchor textarea {
+  min-height: 40px;
+  resize: vertical;
+}
+.rp-remove {
+  align-self: flex-start;
+  color: var(--color-red);
+  text-decoration-color: var(--color-red-bg);
+}
+.rp-dirty {
+  margin: 16px 0 0;
+}
+@media (max-width: 760px) {
+  .rp-row3 {
+    grid-template-columns: 1fr;
+  }
+  .rp-anchor {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .rp-anchor label {
+    padding-top: 0;
+  }
+  .rp-item > summary {
+    flex-wrap: wrap;
+  }
+  .rp-meta {
+    white-space: normal;
+    flex-basis: 100%;
+    padding-left: 19px;
+  }
+  .rp-fields {
+    padding-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp-item > summary::before,
+  .rp-qualities > summary::before {
+    transition: none;
+  }
+}

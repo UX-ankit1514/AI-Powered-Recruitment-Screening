@@ -7,6 +7,8 @@ import { teammateEmails } from "@/components/results/server/team";
 import { EmptyPage, PageSkeleton } from "@/components/results/page-bits";
 import { MessagingSection } from "@/components/settings/messaging-section";
 import { RetentionSettings } from "@/components/settings/retention";
+import { LinesForm } from "@/components/settings/lines-form";
+import { LINES_BOUNDS, loadLines, schedulerStatus, type SchedulerStatus } from "@/lib/calls/lines";
 
 export const metadata = { title: "Settings · Pingo" };
 
@@ -20,6 +22,15 @@ function days(d: number[]) {
   if (s.join() === "1,2,3,4,5") return "Mon–Fri";
   return s.map((x) => DAY[x]).join(", ");
 }
+const SCHEDULER_TEXT: Record<SchedulerStatus["reason"], string> = {
+  ok: "Checks the call queue every minute.",
+  not_scheduled: "The every-minute job that places queued calls is not set up in the database.",
+  no_secret: "The every-minute job is missing its secret in Supabase Vault, so queued calls are never placed.",
+  never_ran: "The every-minute job has not run yet. Queued calls wait until it does.",
+  stale: "The every-minute job has not run for over 3 minutes. Queued calls are waiting.",
+  unknown: "Could not check the scheduler right now.",
+};
+
 const joined = (iso: string) => new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }).format(new Date(iso));
 
 export default function SettingsPage() {
@@ -34,7 +45,8 @@ async function Content() {
   const me = await getMembership();
   if (!me) return <EmptyPage title="Settings" heading="Your account is not linked to a company yet" body="Ask your Pingo admin to add you, then sign in again." />;
   const db = await createClient();
-  const [s, status] = [await loadSettings(db, me.companyId), callingStatus()];
+  const [s, lines, scheduler] = await Promise.all([loadSettings(db, me.companyId), loadLines(db, me.companyId), schedulerStatus(db)]);
+  const status = callingStatus();
   const emails = await teammateEmails(s.members.map((m) => m.user_id));
 
   return (
@@ -43,7 +55,7 @@ async function Content() {
         <div>
           <h1>Settings</h1>
           <p className="muted" style={{ marginTop: 6 }}>
-            Calling setup for {me.companyName || "this workspace"}. Read only here; job hours and lines are edited on each job.
+            Calling setup for {me.companyName || "this workspace"}. Calling hours are set on each job.
           </p>
         </div>
       </div>
@@ -73,6 +85,17 @@ async function Content() {
               {status.message}
             </span>
           </div>
+          <div className="srow">
+            <div>
+              <b>Scheduler</b>
+              <p>{SCHEDULER_TEXT[scheduler.reason]}</p>
+            </div>
+            <span className={`val ${scheduler.running ? "state-ok" : "state-bad"}`}>
+              <i className="dot" aria-hidden="true" />
+              {scheduler.running ? "Running" : "Scheduler not running"}
+            </span>
+          </div>
+          <LinesForm initial={lines.lines} custom={lines.custom} fallback={lines.default} canEdit={me.role === "admin"} bounds={LINES_BOUNDS} />
           <div className="srow">
             <div>
               <b>Call length limit</b>
@@ -122,8 +145,8 @@ async function Content() {
         <RetentionSettings />
         <section className="card full" aria-labelledby="s-jobs">
           <div className="s-head">
-            <h2 id="s-jobs">Lines and calling hours per job</h2>
-            <p>Calls for a job run in parallel up to its line count, only inside its hours (India time).</p>
+            <h2 id="s-jobs">Calling hours per job</h2>
+            <p>Each job’s calls go out only inside its hours (India time), sharing the company’s call lines.</p>
           </div>
           {s.jobs.length ? (
             <div className="tablewrap">
@@ -132,7 +155,6 @@ async function Content() {
                   <tr>
                     <th>Job</th>
                     <th>Status</th>
-                    <th>Lines</th>
                     <th>Hours</th>
                   </tr>
                 </thead>
@@ -141,7 +163,6 @@ async function Content() {
                     <tr key={j.id}>
                       <td>{j.title}</td>
                       <td>{j.status === "open" ? "Open" : "Closed"}</td>
-                      <td className="num">{j.lines}</td>
                       <td>
                         {j.hours ? (
                           <>

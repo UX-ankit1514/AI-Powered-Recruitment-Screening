@@ -19,7 +19,7 @@
     ]
    },
    "task_config": {
-    "voicemail": false,
+    "voicemail": true,
     "use_fillers": false,
     "dtmf_enabled": false,
     "ambient_noise": false,
@@ -200,7 +200,7 @@
   }
  ],
  "created_at": "2026-11-15T12:26:17.401405",
- "updated_at": "2026-11-15T12:26:17.428583",
+ "updated_at": "2026-11-16T03:42:56.373443",
  "gpt_assistants": null,
  "custom_analytics": null,
  "inbound_phone_number": null,

@@ -4,6 +4,9 @@ import { BRIEF_SYSTEM, briefUser } from "./prompts/brief";
 import { CallBriefSchema, RawBriefSchema, type CallBrief, type Profile } from "./schemas";
 import { clip, clipWords } from "./text";
 import { roleList, textList, valueList, type RoleItem, type RubricInput, type TextItem } from "./inputs";
+import { buildInterviewPlan, compressPlan } from "./interview-plan";
+import { completeRoleProfile, fallbackRoleProfile } from "./role-profile";
+import type { RoleProfile } from "./role-profile-schema";
 
 export type BriefProfile = Partial<Profile> & { resume_note?: string | null; resume_questions?: string[] | null };
 export type BriefJob = { id?: string | null; title: string; jd_text?: string | null };
@@ -18,7 +21,28 @@ export type BriefOptions = {
   openRoles?: RoleItem[] | null;
   /** Default true. When false (or the model fails) the brief is assembled without AI. */
   useAi?: boolean;
+  /** Job's current role profile (fallback built from the rubric when missing). */
+  roleProfile?: RoleProfile | null;
+  /** Rubric weights: qualities with weight > 0 must be covered by the plan. */
+  weights?: Record<string, number> | null;
 };
+
+/**
+ * Ordered interview plan (compressed text for {{interview_plan}}): every must-have, must/core
+ * requirement, weighted quality and custom trait, with follow-up probes. Deterministic.
+ */
+export function interviewPlanFor(profile: BriefProfile | null | undefined, rubric: RubricInput | null | undefined, title: string, opts: Pick<BriefOptions, "roleProfile" | "weights"> = {}): string {
+  const traits = rubric?.custom_traits ?? [];
+  const base = opts.roleProfile ?? fallbackRoleProfile({ title, mustHaves: rubric?.must_haves, niceToHaves: rubric?.nice_to_haves, customTraits: traits });
+  const rp = completeRoleProfile(base, traits);
+  const items = buildInterviewPlan({
+    profile: rp,
+    candidate: profile ? { current_role: profile.current_role, years_experience: profile.years_experience, skills: profile.skills, companies: profile.companies, resume_note: profile.resume_note } : null,
+    weights: opts.weights ?? { skills: 30, experience: 30, culture_fit: 25, confidence: 15 },
+    traitKeys: traits.map((t) => t.key),
+  });
+  return compressPlan(items);
+}
 
 const FALLBACK_Q1 = "Could you walk me through the work you're proudest of in your most recent role?";
 const FALLBACK_Q2 = "What drew you to this role, and what would you want to learn in it?";
@@ -93,5 +117,7 @@ export async function writeCallBrief(
     other_interest_prompt: others.length
       ? `${company.name} is also hiring for: ${others.map((r) => r.title).join(", ")}. Ask if any of these interest them.`
       : "Ask what else they enjoy or want to learn, and whether they'd be open to other roles or an internship.",
+    interview_plan: interviewPlanFor(p, rubric, job.title, opts),
+    open_roles: others.length ? others.map((r) => `- ${r.title}`).join("\n") : "",
   });
 }

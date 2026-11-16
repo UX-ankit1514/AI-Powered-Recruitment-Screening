@@ -1,10 +1,16 @@
 /**
- * Browser-side text extraction for job descriptions (PDF, Word .docx, plain text), as in /demo.
- * pdf.js and mammoth load on demand from cdnjs (pinned versions) so they never touch the main bundle.
- * The file never leaves the browser; only the extracted text goes into the form.
+ * Browser-side text extraction for job descriptions and resumes (PDF, Word .docx, plain text).
+ * pdf.js and mammoth load on demand from jsDelivr (the only script CDN the CSP allows), pinned and
+ * integrity-checked, so they never touch the main bundle. The pdf.js worker is cross-origin, so
+ * pdf.js wraps it in a blob: worker (allowed by worker-src). The file never leaves the browser;
+ * only the extracted text is sent.
  */
-const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
-const MAMMOTH = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/";
+const MAMMOTH = "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js";
+export const SCRIPT_INTEGRITY: Record<string, string> = {
+  [`${PDFJS}pdf.min.js`]: "sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e",
+  [MAMMOTH]: "sha384-nFoSjZIoH3CCp8W639jJyQkuPHinJ2NHe7on1xvlUA7SuGfJAfvMldrsoAVm6ECz",
+};
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_PDF_PAGES = 15;
 
@@ -25,6 +31,7 @@ function loadScript(src: string): Promise<void> {
       s.src = src;
       s.async = true;
       s.crossOrigin = "anonymous";
+      if (SCRIPT_INTEGRITY[src]) s.integrity = SCRIPT_INTEGRITY[src];
       s.onload = () => ok();
       s.onerror = () => {
         loaded.delete(src);
@@ -36,6 +43,9 @@ function loadScript(src: string): Promise<void> {
   }
   return p;
 }
+
+/** File types extractText can read (for <input accept>). */
+export const READABLE_ACCEPT = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
 
 export async function extractText(file: File): Promise<string> {
   if (file.size > MAX_BYTES) throw new Error("That file is over 10 MB. Paste the text instead.");

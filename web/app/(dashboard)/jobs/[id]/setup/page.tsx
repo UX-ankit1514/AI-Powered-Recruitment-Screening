@@ -5,6 +5,10 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { canEdit, getMembership } from "@/components/server/session";
 import { SetupEditor, type SetupInitial } from "@/components/jobs/setup-editor";
+import { RoleProfileSection } from "@/components/jobs/role-profile-section";
+import { JobBar } from "@/components/jobs/job-bar";
+import { headers } from "next/headers";
+import { appBaseUrl } from "@/lib/calls/config";
 import { CallingHoursSchema, CultureValueSchema, CustomTraitSchema, FaqItemSchema, MustHaveSchema, WeightsSchema } from "@/lib/types";
 
 export const metadata = { title: "Job & rubric · Pingo" };
@@ -29,7 +33,7 @@ async function SetupContent({ params }: { params: PageProps<"/jobs/[id]/setup">[
   if (!me) notFound();
 
   const supabase = await createClient();
-  const [{ data: job }, { data: rubric }, { count }] = await Promise.all([
+  const [{ data: job }, { data: rubric }, { count }, { count: waiting }, { count: callbacks }, h] = await Promise.all([
     supabase
       .from("jobs")
       .select("id, title, jd_text, status, calling_hours, ats_mode, ats_top_pct, ats_rescue, languages, culture_values, faq")
@@ -42,9 +46,15 @@ async function SetupContent({ params }: { params: PageProps<"/jobs/[id]/setup">[
       .eq("is_current", true)
       .maybeSingle(),
     supabase.from("candidates").select("id", { count: "exact", head: true }).eq("job_id", id),
+    supabase.from("calls").select("id", { count: "exact", head: true }).eq("job_id", id).eq("state", "queued").eq("scheduled", false),
+    supabase.from("calls").select("id", { count: "exact", head: true }).eq("job_id", id).eq("state", "queued").eq("scheduled", true),
+    headers(),
   ]);
   if (!job) notFound();
 
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const origin = host ? `${h.get("x-forwarded-proto") ?? (/^(localhost|127\.0\.0\.1)(:|$)/.test(host) ? "http" : "https")}://${host}` : undefined;
+  const applyUrl = `${appBaseUrl(origin) ?? ""}/apply/${job.id}`;
   const hours = CallingHoursSchema.safeParse(job.calling_hours);
   const weights = WeightsSchema.safeParse(rubric?.weights);
   const initial: SetupInitial = {
@@ -84,7 +94,16 @@ async function SetupContent({ params }: { params: PageProps<"/jobs/[id]/setup">[
           </Link>
         </div>
       </div>
+      <JobBar
+        jobId={job.id}
+        applyUrl={applyUrl}
+        open={job.status === "open"}
+        waiting={waiting ?? 0}
+        callbacks={callbacks ?? 0}
+        canEdit={canEdit(me.role)}
+      />
       <SetupEditor initial={initial} editable={canEdit(me.role)} />
+      <RoleProfileSection jobId={job.id} editable={canEdit(me.role)} hasJd={job.jd_text.trim().length > 0} />
     </>
   );
 }

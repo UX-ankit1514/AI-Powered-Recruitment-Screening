@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { canEdit, getMembership } from "@/components/server/session";
 import { formatInt } from "@/components/candidate-format";
+import { loadRanking } from "@/components/results/server/data";
 
 export const metadata = { title: "Jobs · Pingo" };
 
@@ -29,25 +30,26 @@ async function JobsContent() {
     );
   }
   const supabase = await createClient();
-  const [{ data: jobs, error }, { data: ranking }] = await Promise.all([
-    supabase
-      .from("jobs")
-      .select("id, title, status, ats_mode, created_at")
-      .eq("company_id", me.companyId)
-      .order("created_at", { ascending: false }),
-    supabase.from("candidate_ranking").select("job_id, status, pick, score_id").eq("company_id", me.companyId),
-  ]);
+  const { data: jobs, error } = await supabase
+    .from("jobs")
+    .select("id, title, status, ats_mode, created_at")
+    .eq("company_id", me.companyId)
+    .order("created_at", { ascending: false });
 
+  // Same picks as the ranking page: current rubric weights, then the team's overrides.
+  const rankings = await Promise.all((jobs ?? []).map((j) => loadRanking(supabase, j.id)));
   const stats = new Map<string, { applicants: number; called: number; scored: number; amazing: number; good: number }>();
-  for (const r of ranking ?? []) {
-    if (!r.job_id) continue;
-    const s = stats.get(r.job_id) ?? { applicants: 0, called: 0, scored: 0, amazing: 0, good: 0 };
-    s.applicants++;
-    if (r.status && CALLED.has(r.status)) s.called++;
-    if (r.score_id) s.scored++;
-    if (r.pick === "amazing") s.amazing++;
-    if (r.pick === "good") s.good++;
-    stats.set(r.job_id, s);
+  for (const rk of rankings) {
+    if (!rk) continue;
+    const s = { applicants: 0, called: 0, scored: 0, amazing: 0, good: 0 };
+    for (const r of rk.rows) {
+      s.applicants++;
+      if (CALLED.has(r.status)) s.called++;
+      if (r.scored) s.scored++;
+      if (r.pick === "amazing") s.amazing++;
+      if (r.pick === "good") s.good++;
+    }
+    stats.set(rk.job.id, s);
   }
   const editable = canEdit(me.role);
 

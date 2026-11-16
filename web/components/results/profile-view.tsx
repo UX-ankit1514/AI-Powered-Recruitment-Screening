@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { PICK_LABEL, callText, initials, mmss, sourceLabel, type PickValue } from "@/components/candidate-format";
 import { resumeGap, resumeWouldDrop } from "./model";
-import type { Profile } from "./server/data";
+import type { Profile, ProfileEvaluation } from "./server/data";
 
 const PICKS: PickValue[] = ["amazing", "good", "maybe", "no"];
 
@@ -237,6 +237,8 @@ export function ProfileView({ p, canEdit, meIsHm }: { p: Profile; canEdit: boole
 
       <div className="prof-grid">
         <div>
+          {p.evaluation ? <JdFitSection ev={p.evaluation} canSeek={canSeek} onQuote={(t) => playQuote(t, null)} /> : null}
+
           <section className="card sec">
             <h2>
               Qualities <span className="label" style={{ fontWeight: 400 }}>· 1 to 5, with what they said</span>
@@ -256,9 +258,9 @@ export function ProfileView({ p, canEdit, meIsHm }: { p: Profile; canEdit: boole
                           <i key={i} className={has && i <= (qq?.score ?? 0) ? "on" : undefined} />
                         ))}
                       </span>
-                      <span className="qscore">{has ? `${qq?.score}/5` : "n/a"}</span>
+                      <span className="qscore">{has ? `${fmtScore(qq?.score ?? 0)}/5` : "n/a"}</span>
                     </div>
-                    <div className="qreason">{qq?.reason || "Not enough evidence in the call to score this."}</div>
+                    <div className="qreason">{has ? qq?.reason || "Scored from the call." : "Not covered on the call, so it doesn't count either way. Its weight is shared out among the qualities that were."}</div>
                     {(qq?.quotes ?? []).slice(0, 2).map((t, i) => {
                       const s = tsSeconds(t.ts);
                       return canSeek ? (
@@ -466,5 +468,146 @@ function FlagList({ p }: { p: Profile }) {
         </ul>
       ) : null}
     </>
+  );
+}
+
+/** 4 → "4", 3.5 → "3.5" (two scoring passes are averaged). */
+const fmtScore = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+
+const RESULT: Record<ProfileEvaluation["jdFit"]["requirements"][number]["status"], { text: string; cls: string }> = {
+  met: { text: "Met", cls: "mh" },
+  partial: { text: "Partly", cls: "mh part" },
+  not_met: { text: "Not met", cls: "mh no" },
+  not_covered: { text: "Not covered", cls: "mh na" },
+};
+const LEVEL: Record<string, string> = { must: "Must-have", core: "Core", nice: "Nice to have" };
+
+function confidenceWords(c: number): { word: string; why: string } {
+  if (c >= 0.75) return { word: "High", why: "Most of the interview plan was covered and both scoring passes agreed." };
+  if (c >= 0.5) return { word: "Medium", why: "Some of the plan wasn't covered, or the scoring passes didn't fully agree." };
+  return { word: "Low", why: "Much of the plan wasn't covered on this call. Treat the pick as provisional." };
+}
+
+function JdFitSection({ ev, canSeek, onQuote }: { ev: ProfileEvaluation; canSeek: boolean; onQuote: (text: string) => void }) {
+  const f = ev.jdFit;
+  const conf = ev.confidence === null ? null : confidenceWords(ev.confidence);
+  const notCovered = f.requirements.filter((r) => r.status === "not_covered");
+  return (
+    <section className="card sec fit" aria-labelledby="fit-h">
+      <div className="fit-head">
+        <h2 id="fit-h">JD fit</h2>
+        <div className="fit-num">
+          <span className="num">{f.fit_pct ?? "—"}</span>
+          {f.fit_pct !== null ? <span className="fit-pct">%</span> : null}
+        </div>
+      </div>
+      {conf && ev.confidence !== null ? (
+        <p className="fit-conf">
+          <b>{conf.word} confidence</b> <span className="num">{Math.round(ev.confidence * 100)}%</span> · {conf.why}
+        </p>
+      ) : null}
+
+      {ev.needsReview ? (
+        <div className="fit-review" role="note">
+          <b>Needs a second look.</b>{" "}
+          {ev.disagreements.length
+            ? `Two independent scoring passes disagreed by more than a point on ${ev.disagreements.map((d) => d.label).join(", ")}. The score shown is their average, so read the quotes before deciding.`
+            : "Too little of the call could be scored with confidence. Read the transcript before deciding."}
+        </div>
+      ) : null}
+
+      {f.rationale ? <p className="fit-why">{f.rationale}</p> : null}
+
+      <ul className="plain fit-reqs">
+        {f.requirements.map((r) => {
+          const res = RESULT[r.status];
+          return (
+            <li key={r.id}>
+              <span className={res.cls}>{res.text}</span>
+              <div className="fit-req">
+                <div className="fit-req-top">
+                  <span className="fit-req-text">{r.text}</span>
+                  <span className="label">{LEVEL[r.importance] ?? r.importance}</span>
+                </div>
+                {r.status === "not_covered" ? (
+                  <span className="qreason">Didn&apos;t come up on the call. It isn&apos;t held against them.</span>
+                ) : (
+                  <>
+                    {r.justification ? <span className="qreason">{r.justification}</span> : null}
+                    {r.quote ? (
+                      canSeek ? (
+                        <button type="button" className="quote" onClick={() => onQuote(r.quote!)} title="Find in transcript">
+                          “{r.quote}”
+                        </button>
+                      ) : (
+                        <blockquote className="quote">“{r.quote}”</blockquote>
+                      )
+                    ) : null}
+                  </>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      {f.strengths.length || f.gaps.length ? (
+        <div className="fit-sg">
+          <div>
+            <h3>Strengths</h3>
+            {f.strengths.length ? (
+              <ul>
+                {f.strengths.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="label">None stood out.</p>
+            )}
+          </div>
+          <div>
+            <h3>Gaps</h3>
+            {f.gaps.length ? (
+              <ul>
+                {f.gaps.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="label">No gaps found.</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {notCovered.length || f.not_covered.length ? (
+        <div className="fit-nc">
+          <span className="label">Not covered on the call</span>
+          <div className="chips">
+            {[...new Set([...notCovered.map((r) => r.text), ...f.not_covered])].slice(0, 12).map((t) => (
+              <span key={t} className="chip">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {f.hidden_fits.length ? (
+        <div className="fit-nc">
+          <span className="label">Could also fit</span>
+          <ul className="plain">
+            {f.hidden_fits.map((h) => (
+              <li key={h.title}>
+                <span className="chip f-role">{h.title}</span>
+                <span className="qreason" style={{ marginTop: 0 }}>
+                  {h.reason}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
   );
 }

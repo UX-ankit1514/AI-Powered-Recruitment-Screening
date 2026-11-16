@@ -5,6 +5,7 @@ import { readFlags, isHiddenFit, sourceLabel, type CallSummary } from "@/compone
 import { CustomTraitSchema, MustHaveSchema, WeightsSchema, type CustomTrait, type CallOutcome, type CallState } from "@/lib/types";
 import { z } from "zod";
 import { fxInrPerUsd } from "@/lib/cost";
+import { latestOverrides, type OverrideInfo } from "@/components/results/model";
 
 export type DashCandidate = {
   id: string;
@@ -19,6 +20,8 @@ export type DashCandidate = {
   shortExit: boolean;
   summary: string;
   call: CallSummary | null;
+  /** The team's pick, when someone changed it (latest override action). */
+  override: OverrideInfo | null;
 };
 
 export type LiveCall = { id: string; name: string; state: CallState; startedAt: string | null };
@@ -85,6 +88,15 @@ export async function loadDashboard(me: Membership, jobs: JobPick[], requestedJo
   if (!jobRes.data) return null;
   const job = jobRes.data;
 
+  // HR pick overrides live in the audit log (latest override action per candidate).
+  const rankIds = (rankRes.data ?? []).map((r) => r.candidate_id).filter((id): id is string => Boolean(id));
+  const overrideRows: { candidate_id: string; new_value: unknown; note: string | null; at: string }[] = [];
+  for (let i = 0; i < rankIds.length; i += 150) {
+    const { data } = await supabase.from("actions").select("candidate_id, new_value, note, at").eq("type", "override").in("candidate_id", rankIds.slice(i, i + 150));
+    overrideRows.push(...(data ?? []));
+  }
+  const overrides = latestOverrides(overrideRows);
+
   // latest call per candidate (rows ordered oldest → newest, so the last write wins)
   const latestCall = new Map<string, CallSummary>();
   let spendCents = 0;
@@ -118,6 +130,7 @@ export async function loadDashboard(me: Membership, jobs: JobPick[], requestedJo
       shortExit: r.short_exit === true,
       summary: r.summary ?? "",
       call: latestCall.get(r.candidate_id as string) ?? null,
+      override: overrides.get(r.candidate_id as string) ?? null,
     }));
 
   const sourceCounts = new Map<string, number>();

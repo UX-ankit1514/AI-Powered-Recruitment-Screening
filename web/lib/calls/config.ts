@@ -14,6 +14,19 @@ export const DIALABLE_PHONE = /^\+91[6-9]\d{9}$/;
 export const MAX_ATTEMPTS = 3;
 export const MAX_RESCHEDULES = 2;
 export const RETRY_DELAY_MIN = 30;
+/** Bolna refused the call for capacity (429 / concurrency): try again soon, without using an attempt. */
+export const REFUSAL_REQUEUE_MIN = 2;
+/** Batch calls are dialled no earlier than this after their heads-up message. */
+export const HEADS_UP_LEAD_MS = 2 * 60_000;
+
+/** Termination reasons that mean "Bolna had no free line", not "we tried the candidate". */
+export const CAPACITY_REFUSALS = new Set(["concurrency_limit_reached", "rate_limited", "dispatch_error_429"]);
+
+/** Call lines per company when the company has not set its own (env DEFAULT_CONCURRENCY, else 2). */
+export function defaultLines(): number {
+  const n = Number(process.env.DEFAULT_CONCURRENCY);
+  return Number.isInteger(n) && n >= 1 && n <= 50 ? n : 2;
+}
 
 export function agentId(): string {
   const fromEnv = process.env.BOLNA_APP_AGENT_ID?.trim();

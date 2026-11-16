@@ -33,6 +33,8 @@ Test files referenced below live in `/web/tests`. "Matrix" = `tests/security/rou
 | 2.5 | AI scores can only be written by the server | Pass (new) | Migration `20261115150000`: insert/update/delete revoked from clients. `tests/security/score-retry.test.ts` "clients cannot claim retries or write scores" |
 | 2.6 | Least privilege: no TRUNCATE/TRIGGER/REFERENCES for clients, no writes through the ranking view | Pass (new) | Migration `20261115150000` |
 | 2.7 | Rubric save is atomic and role-checked in the database too | Pass (new) | `save_rubric_version()` (security invoker + role check + per-job lock). `tests/security/rubric-atomic.test.ts` (anon/hm/other refused, 10 concurrent saves stay consistent) |
+| 2.8 | Role profiles: RLS by company, versioned, saved atomically with a role check | Pass (new) | `role_profiles` (member read, admin/recruiter insert/update, no client delete); `save_role_profile_version()` (security invoker + role check + per-job lock); routes PUT `/api/jobs/[id]/role-profile`, POST `.../generate`. `tests/jobs/role-profile-routes.test.ts` (anon 401, other 404, hm 403, recruiter/admin 200, direct-table RLS) + route matrix |
+| 2.9 | Webhook reprocessing is service-role only | Pass (new) | `claim_unprocessed_webhook_events()` executable by service_role only; `tests/jobs/role-profile-routes.test.ts` checks anon/admin/hm are refused |
 | 2.8 | Storage: private `resumes` bucket, company-scoped policies | Pass | Bucket `public=false`; policies by first path segment; `tests/ingest/routes.test.ts` "company-scoped storage access" |
 | 2.9 | Supabase advisors | Pass | Security: only leaked-password protection (see 1.11). Performance: redundant index dropped; one "unused index" on a new table is expected at low volume |
 | 2.10 | Recruiters can edit call rows (e.g. transcript) of their own company | Accepted | Needed for queueing/stopping calls; scoring reads the transcript the webhook stored. Revisit if recruiters must not touch call data |
@@ -95,7 +97,7 @@ The service-role client imports `server-only`, so any browser import fails the b
 | 7.1 | Public apply: 5 per hour per IP (database-backed, IP stored hashed) | Pass | `tests/ingest/routes.test.ts` "rate-limits to 5 per hour per IP" |
 | 7.2 | Apply: honeypot, consent required, file type checked by magic bytes | Pass | `tests/ingest/routes.test.ts` |
 | 7.3 | Login emails rate-limited by Supabase | Pass | Supabase auth limits (email sends per hour, OTP and verify limits) |
-| 7.4 | Signed-in AI routes (rubric draft, browser call) have no per-user limit | Accepted | Only admins/recruiters of a company can reach them; revisit before opening to many customers |
+| 7.4 | Signed-in AI routes (rubric draft, role profile generate, browser call) have no per-user limit | Accepted | Only admins/recruiters of a company can reach them; revisit before opening to many customers |
 
 ## 8. Correctness fixes made in M9
 
@@ -104,6 +106,17 @@ The service-role client imports `server-only`, so any browser import fails the b
 | 8.1 | Call cost stored in US cents was shown as rupees (100x off and wrong currency) | Fixed | Dashboard now shows dollars and a clearly derived rupee figure at `COST_FX_INR_PER_USD` (default 88). `tests/security/unit.test.ts` "call cost" |
 | 8.2 | Flaky test phone generator could collide in one job | Fixed | `tests/ingest/routes.test.ts` |
 
+## 9. Execution-review fixes (2026-11-16, migration `20261116140100`)
+
+| # | Item | Status | Evidence |
+|---|---|---|---|
+| 9.1 | Call lines are company-wide and admin-only (route check + `companies_guard_lines` trigger refuses recruiters writing directly) | Pass | `tests/calls/execution-fixes.test.ts` "company lines"; Matrix `PUT /api/settings/lines` (hm/recruiter 403) |
+| 9.2 | Close job / Stop / Reject cancel calls through the caller's RLS client only | Pass | Matrix `POST /api/jobs/[id]/close` (anon 401, hm 403, other 404); recruiter success + scoping in `execution-fixes.test.ts` |
+| 9.3 | `scheduler_ticks` is service-only (restrictive deny-all); `scheduler_health()` returns booleans + a timestamp to signed-in members, never a secret; anon cannot execute it | Pass | `execution-fixes.test.ts` "scheduler", "signed-out callers get nothing" |
+| 9.4 | `claim_due_calls(p_limit, p_job_id, p_default_lines)` stays SECURITY DEFINER, `search_path=''`, service role only | Pass | Migration `20261116140100` |
+| 9.5 | Browser file readers (pdf.js, mammoth) load from jsDelivr with SRI; the previous cdnjs URLs were blocked by our own CSP | Pass (fixed) | `components/jobs/extract-text.ts` |
+| 9.6 | Removed unused routes `/api/jobs/[id]/screen` and `/api/jobs/[id]/ats/apply` | Pass | Matrix coverage test |
+
 ## Configuration reference
 
 | Env | Default | Purpose |
@@ -111,4 +124,5 @@ The service-role client imports `server-only`, so any browser import fails the b
 | `DISPATCH_ENABLED` | unset (paused) | Phone calls only when exactly `true` |
 | `BOLNA_IP_ALLOWLIST` | Bolna's 3 IPs | Webhook/reschedule source IPs; `off` disables |
 | `COST_FX_INR_PER_USD` | 88 | Rate for the derived rupee cost |
-| `RATE_LIMIT_SALT` | service key | Salt for hashed apply-form IPs |
+| `RATE_LIMIT_SALT` | service key | Salt for hashed apply-form IPs (set on Vercel production 2026-11-16) |
+| `DEFAULT_CONCURRENCY` | 2 | Call lines for a company that has not set its own (Settings) |

@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { parseCandidateCsv } from "@/lib/ingest/csv";
 import type { CallOutcome, CallState } from "@/lib/types";
+import { READABLE_ACCEPT, extractText, tidy } from "@/components/jobs/extract-text";
+import { fileKey, matchResumes } from "./resume-match";
 
 type Progress = {
   batch: { id: string; status: string };
@@ -13,11 +15,19 @@ type Progress = {
   queued: number;
   in_flight: number;
   done: number;
+  callbacks: number;
   outcomes: Record<string, number>;
 };
+type Resume = { name: string; status: "reading" | "ok" | "error"; text: string; error?: string };
+type ImportOut = { candidate_ids: string[]; duplicates: number; invalid: { row: number; reason: string }[]; resumes_read?: number };
+
+const MAX_RESUME_CHARS = 20_000;
+/** Rows carrying resume text go up in small groups: each import reads its resumes before answering. */
+const RESUME_CHUNK = 20;
 type BRow = { candidate_id: string; name: string; tail: string; status: string; state: CallState; outcome: CallOutcome | null; attempt: number };
 
-const SAMPLE = "name,phone,resume_note\nRiya Sharma,+91 98765 43210,2 yrs inside sales at an edtech\nArjun Mehta,9876501234,Fresher; B.Com; sold college fest sponsorships\n";
+const SAMPLE =
+  "name,phone,resume_filename,resume_note\nRiya Sharma,+91 98765 43210,riya-sharma.pdf,2 yrs inside sales at an edtech\nArjun Mehta,9876501234,arjun-mehta.docx,Fresher; B.Com; sold college fest sponsorships\n";
 const SAMPLE_HREF = `data:text/csv;charset=utf-8,${encodeURIComponent(SAMPLE)}`;
 
 const OUT_LABEL: Record<CallOutcome, string> = {
@@ -59,10 +69,67 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
   const [batchId, setBatchId] = useState<string | null>(initialBatchId);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [rows, setRows] = useState<BRow[]>([]);
+  const [resumes, setResumes] = useState<Record<string, Resume>>({});
+  const [manual, setManual] = useState<Record<string, string>>({});
+  const [dragOver, setDragOver] = useState(false);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [dropCallbacks, setDropCallbacks] = useState(false);
 
   const parsed = useMemo(() => (text.trim() ? parseCandidateCsv(text) : []), [text]);
-  const usable = parsed.filter((r) => r.name && r.phone);
+  const usable = useMemo(() => parsed.filter((r) => r.name && r.phone), [parsed]);
   const skipped = parsed.length - usable.length;
+
+  // Resume ↔ row: the CSV's file-name column, else the applicant's name in the file name; manual picks win.
+  const auto = useMemo(
+    () => matchResumes(usable.map((r) => ({ key: String(r.row), name: r.name, resume_filename: r.resume_filename })), Object.values(resumes).map((f) => f.name)),
+    [usable, resumes],
+  );
+  const resumeFor = (rowKey: string): Resume | null => {
+    const picked = manual[rowKey];
+    const name = picked === undefined ? auto.get(rowKey) : picked;
+    return name ? (resumes[fileKey(name)] ?? null) : null;
+  };
+  const matchedKeys = new Set(usable.map((r) => resumeFor(String(r.row))).filter((f): f is Resume => Boolean(f)).map((f) => fileKey(f.name)));
+  const resumeList = Object.values(resumes);
+  const unmatched = resumeList.filter((f) => !matchedKeys.has(fileKey(f.name)));
+  const reading = resumeList.some((f) => f.status === "reading");
+  const withResume = usable.filter((r) => resumeFor(String(r.row))?.status === "ok").length;
+
+  async function addResumes(files: File[], forRow?: string) {
+    const list = files.filter((f) => f.name);
+    if (!list.length) return;
+    setResumes((m) => {
+      const next = { ...m };
+      for (const f of list) next[fileKey(f.name)] = { name: f.name, status: "reading", text: "" };
+      return next;
+    });
+    if (forRow) setManual((m) => ({ ...m, [forRow]: list[0].name }));
+    // a few at a time: PDF reading is heavy on low-end laptops
+    const queue = [...list];
+    const worker = async () => {
+      for (let f = queue.shift(); f; f = queue.shift()) {
+        const file = f;
+        let next: Resume;
+        try {
+          const t = tidy(await extractText(file)).slice(0, MAX_RESUME_CHARS);
+          next = t ? { name: file.name, status: "ok", text: t } : { name: file.name, status: "error", text: "", error: "No text found (a scanned image?)" };
+        } catch (e) {
+          next = { name: file.name, status: "error", text: "", error: e instanceof Error ? e.message : "Could not read this file" };
+        }
+        setResumes((m) => (m[fileKey(file.name)] ? { ...m, [fileKey(file.name)]: next } : m));
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+  }
+
+  function removeResume(name: string) {
+    setResumes((m) => {
+      const next = { ...m };
+      delete next[fileKey(name)];
+      return next;
+    });
+    setManual((m) => Object.fromEntries(Object.entries(m).filter(([, v]) => fileKey(v) !== fileKey(name))));
+  }
 
   const finished =
     !!progress && (progress.batch.status === "stopped" || progress.batch.status === "done" || (progress.total > 0 && progress.queued + progress.in_flight === 0));
@@ -86,8 +153,7 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
     }
     const latest = new Map<string, BRow>();
     for (const c of data ?? []) {
-      const prev = latest.get(c.candidate_id);
-      if (prev && prev.attempt > c.attempt) continue;
+      // rows arrive oldest → newest; a callback restarts at attempt 1, so the newest row wins
       latest.set(c.candidate_id, {
         candidate_id: c.candidate_id,
         name: c.candidate?.name ?? "Candidate",
@@ -137,19 +203,45 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
     if (!consent) return setErr("Confirm these applicants agreed to be contacted.");
     setBusy(true);
     try {
-      const imp = await fetch(`/api/jobs/${job.id}/candidates/import`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          rows: usable.map((r) => ({ name: r.name, phone: r.phone, ...(r.email ? { email: r.email } : {}), ...(r.resume_note ? { resume_note: r.resume_note } : {}) })),
-          consent_confirmed: true,
-        }),
-      });
-      if (!imp.ok) return setErr(await errorOf(imp, "Could not add these applicants."));
-      const d = (await imp.json()) as { candidate_ids: string[]; duplicates: number; invalid: { row: number; reason: string }[] };
+      const toRow = (r: (typeof usable)[number]) => {
+        const resume = resumeFor(String(r.row));
+        return {
+          name: r.name,
+          phone: r.phone,
+          ...(r.email ? { email: r.email } : {}),
+          ...(r.resume_note ? { resume_note: r.resume_note } : {}),
+          ...(resume?.status === "ok" ? { resume_text: resume.text } : {}),
+        };
+      };
+      const all = usable.map(toRow);
+      const plain = all.filter((r) => !("resume_text" in r));
+      const rich = all.filter((r) => "resume_text" in r);
+      const chunks = [...(plain.length ? [plain] : []), ...Array.from({ length: Math.ceil(rich.length / RESUME_CHUNK) }, (_, i) => rich.slice(i * RESUME_CHUNK, (i + 1) * RESUME_CHUNK))];
+      const d: ImportOut = { candidate_ids: [], duplicates: 0, invalid: [], resumes_read: 0 };
+      let sent = 0;
+      for (const chunk of chunks) {
+        if (rich.length) setNote(`Adding applicants and reading resumes… ${Math.min(sent, all.length)} of ${all.length}`);
+        const imp = await fetch(`/api/jobs/${job.id}/candidates/import`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ rows: chunk, consent_confirmed: true }),
+        });
+        if (!imp.ok) {
+          setNote("");
+          return setErr(`${await errorOf(imp, "Could not add these applicants.")}${d.candidate_ids.length ? ` ${d.candidate_ids.length} were added before this; they are in the job, not called yet.` : ""}`);
+        }
+        const part = (await imp.json()) as ImportOut;
+        d.candidate_ids.push(...part.candidate_ids);
+        d.duplicates += part.duplicates;
+        d.invalid.push(...(part.invalid ?? []));
+        d.resumes_read = (d.resumes_read ?? 0) + (part.resumes_read ?? 0);
+        sent += chunk.length;
+      }
+      setNote("");
       const parts = [
         d.duplicates ? `${d.duplicates} already in this job` : "",
         d.invalid?.length ? `${d.invalid.length} with a number that does not look right` : "",
+        d.resumes_read ? `${d.resumes_read} resume${d.resumes_read === 1 ? "" : "s"} read` : "",
       ].filter(Boolean);
       if (!d.candidate_ids.length) return setErr(`Nobody new to call${parts.length ? `: ${parts.join(", ")}` : ""}.`);
 
@@ -169,6 +261,8 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
       );
       setText("");
       setFileName("");
+      setResumes({});
+      setManual({});
       setConsent(false);
       setProgress(null);
       setRows([]);
@@ -186,10 +280,17 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
     setBusy(true);
     setErr("");
     try {
-      const res = await fetch(`/api/batches/${batchId}/cancel`, { method: "POST" });
+      const res = await fetch(`/api/batches/${batchId}/cancel`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cancel_callbacks: dropCallbacks }),
+      });
       if (!res.ok) return setErr(await errorOf(res, "Could not stop the batch."));
-      const d = (await res.json()) as { cancelled: number };
-      setNote(`Stopped. ${d.cancelled} waiting call${d.cancelled === 1 ? "" : "s"} cancelled; calls already on the line finish normally.`);
+      const d = (await res.json()) as { cancelled: number; callbacks_kept?: number };
+      const kept = d.callbacks_kept ? ` ${d.callbacks_kept} booked callback${d.callbacks_kept === 1 ? "" : "s"} will still happen.` : "";
+      setNote(`Stopped. ${d.cancelled} waiting call${d.cancelled === 1 ? "" : "s"} cancelled and nobody will be retried; calls already on the line finish normally.${kept}`);
+      setConfirmStop(false);
+      setDropCallbacks(false);
       await load(batchId);
     } catch {
       setErr("Could not reach Pingo. Try again.");
@@ -199,6 +300,8 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
   }
 
   function fresh() {
+    setConfirmStop(false);
+    setDropCallbacks(false);
     setBatchId(null);
     setProgress(null);
     setRows([]);
@@ -214,13 +317,16 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
       <div className="bp-head">
         <div>
           <h2 id="bp-title">Call a batch</h2>
-          <p>Upload a CSV or paste one applicant per line. Pingo calls them on the job’s lines inside calling hours and ranks each one as their call ends.</p>
+          <p>
+            Upload a CSV or paste one applicant per line, and add their resumes if you have them. Pingo reads each resume, calls everyone inside calling hours and
+            ranks each one as their call ends.
+          </p>
         </div>
         {batchId ? (
           <div className="btnrow">
-            {!finished && canCall ? (
-              <button className="btn2" type="button" onClick={stop} disabled={busy}>
-                Stop waiting calls
+            {!finished && canCall && !confirmStop ? (
+              <button className="btn2" type="button" onClick={() => setConfirmStop(true)} disabled={busy}>
+                Stop batch
               </button>
             ) : null}
             <button className="btn2" type="button" onClick={fresh} disabled={busy}>
@@ -270,6 +376,111 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
                 />
               </div>
             </div>
+            <div
+              className={`bp-res${dragOver ? " over" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                void addResumes([...e.dataTransfer.files]);
+              }}
+            >
+              <div className="bp-res-top">
+                <div>
+                  <label htmlFor="bp-resumes" className="flabel" style={{ fontWeight: 600, fontSize: 13 }}>
+                    Resumes (optional)
+                  </label>
+                  <small>
+                    Drop PDF, Word or text files here, or choose them. Each one is matched to an applicant by the CSV’s file name column, or by the applicant’s name in
+                    the file name. The text is read on this computer; the files are not uploaded.
+                  </small>
+                </div>
+                <input id="bp-resumes" type="file" multiple accept={READABLE_ACCEPT} onChange={(e) => void addResumes([...(e.target.files ?? [])]).then(() => (e.target.value = ""))} />
+              </div>
+              {unmatched.length ? (
+                <ul className="bp-res-list" aria-label="Resumes not matched to an applicant">
+                  {unmatched.map((f) => (
+                    <li key={f.name}>
+                      <span>{f.name}</span>
+                      <span className={f.status === "error" ? "bp-bad-inline" : "label"}>
+                        {f.status === "reading" ? "Reading…" : f.status === "error" ? f.error : "Not matched: pick it in the list below"}
+                      </span>
+                      <button type="button" className="linkbtn" onClick={() => removeResume(f.name)} aria-label={`Remove ${f.name}`}>
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+
+            {usable.length ? (
+              <div className="bp-tbl">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Mobile</th>
+                      <th>Resume</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usable.map((r) => {
+                      const key = String(r.row);
+                      const res = resumeFor(key);
+                      return (
+                        <tr key={key}>
+                          <td>{r.name}</td>
+                          <td className="num">••{r.phone.replace(/\D/g, "").slice(-4)}</td>
+                          <td>
+                            <div className="bp-res-cell">
+                              {res ? (
+                                <span className={`chip ${res.status === "ok" ? "run" : res.status === "error" ? "bad" : ""}`} title={res.error ?? res.name}>
+                                  {res.status === "reading" ? "Reading…" : res.status === "error" ? "Could not read" : res.name}
+                                </span>
+                              ) : null}
+                              {resumeList.length ? (
+                                <select
+                                  aria-label={`Resume for ${r.name}`}
+                                  value={res?.name ?? ""}
+                                  onChange={(e) => setManual((m) => ({ ...m, [key]: e.target.value }))}
+                                >
+                                  <option value="">No resume</option>
+                                  {resumeList.map((f) => (
+                                    <option key={f.name} value={f.name}>
+                                      {f.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : null}
+                              <label className="linkbtn bp-attach">
+                                {res ? "Replace" : "Attach"}
+                                <input
+                                  type="file"
+                                  accept={READABLE_ACCEPT}
+                                  className="sr-only"
+                                  aria-label={`Attach a resume for ${r.name}`}
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) void addResumes([f], key);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+
             <div className="bp-foot">
               <label className="chk">
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
@@ -279,9 +490,10 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
                 <span className="bp-meta">
                   {usable.length ? `${usable.length} applicant${usable.length === 1 ? "" : "s"}${fileName ? ` from ${fileName}` : ""}` : "No applicants yet"}
                   {skipped ? ` · ${skipped} line${skipped === 1 ? "" : "s"} missing a name or number` : ""}
+                  {usable.length && resumeList.length ? ` · ${withResume} with a resume` : ""}
                 </span>
-                <button className="btn" type="button" onClick={start} disabled={busy || !usable.length}>
-                  {busy ? "Queuing…" : `Call ${usable.length || ""} candidate${usable.length === 1 ? "" : "s"}`.replace("  ", " ")}
+                <button className="btn" type="button" onClick={start} disabled={busy || reading || !usable.length}>
+                  {busy ? "Queuing…" : reading ? "Reading resumes…" : `Call ${usable.length || ""} candidate${usable.length === 1 ? "" : "s"}`.replace("  ", " ")}
                 </button>
               </div>
             </div>
@@ -310,6 +522,35 @@ export function BatchPanel({ job, canCall, initialBatchId }: { job: { id: string
               <i style={{ width: `${pct}%` }} />
             </div>
           </div>
+          {confirmStop && !finished ? (
+            <div className="bp-stop" role="group" aria-labelledby="bp-stop-title">
+              <b id="bp-stop-title">Stop this batch?</b>
+              <p>
+                {progress?.queued ?? 0} waiting call{(progress?.queued ?? 0) === 1 ? " is" : "s are"} cancelled and nobody in it is retried. Calls already on the line finish
+                normally.
+                {progress?.callbacks && !dropCallbacks
+                  ? ` ${progress.callbacks} booked callback${progress.callbacks === 1 ? "" : "s"} will still happen.`
+                  : ""}
+              </p>
+              {progress?.callbacks ? (
+                <label className="chk">
+                  <input type="checkbox" checked={dropCallbacks} onChange={(e) => setDropCallbacks(e.target.checked)} />
+                  <span>
+                    Also cancel the {progress.callbacks} booked callback{progress.callbacks === 1 ? "" : "s"}
+                    <small>These candidates asked for a time; cancelling breaks that promise.</small>
+                  </span>
+                </label>
+              ) : null}
+              <div className="btnrow">
+                <button className="btn sm" type="button" onClick={stop} disabled={busy}>
+                  {busy ? "Stopping…" : "Stop batch"}
+                </button>
+                <button className="btn2 sm" type="button" onClick={() => setConfirmStop(false)} disabled={busy}>
+                  Keep calling
+                </button>
+              </div>
+            </div>
+          ) : null}
           {rows.length ? (
             <div className="bp-tbl">
               <table>

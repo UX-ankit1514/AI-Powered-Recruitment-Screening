@@ -25,7 +25,7 @@ vi.mock("../../lib/supabase/admin", async () => {
 });
 
 import { handleApply, ipHash } from "../../lib/ingest/apply";
-import { handleAtsApply } from "../../lib/ingest/ats-route";
+import * as jobRoute from "../../app/api/jobs/[id]/route";
 import { handleBatchProgress, handleCreateBatch } from "../../lib/ingest/batches";
 import { handleImport } from "../../lib/ingest/import";
 import { __setResumeReader } from "../../lib/ingest/resume";
@@ -50,6 +50,12 @@ const testPhone = () => `+1555010${String(phoneSeq++ % 10_000).padStart(4, "0")}
 const as = (c: DB) => {
   h.client = c;
 };
+
+/** Saving "who gets a call" on the job re-applies it (PUT /api/jobs/:id). */
+const saveAts = (job: string, body: Record<string, unknown> = { ats_mode: "call_everyone" }) =>
+  jobRoute.PUT(new Request(`http://localhost/api/jobs/${job}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }), {
+    params: Promise.resolve({ id: job }),
+  } as never);
 
 function anonClient(): DB {
   return createClient(URL_, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -125,9 +131,9 @@ describe("unauthenticated", () => {
     expect(res.status).toBe(401);
     expect(await candidatesOf(jobId)).toHaveLength(0);
   });
-  it("ATS apply -> 401", async () => {
+  it("saving the ATS setting -> 401", async () => {
     as(anon);
-    expect((await handleAtsApply(jobId)).status).toBe(401);
+    expect((await saveAts(jobId)).status).toBe(401);
   });
   it("create batch -> 401 (even with a bad body)", async () => {
     as(anon);
@@ -147,9 +153,9 @@ describe("hiring manager (read-only)", () => {
     expect(res.status).toBe(403);
     expect(await candidatesOf(jobId)).toHaveLength(0);
   });
-  it("ATS apply -> 403", async () => {
+  it("saving the ATS setting -> 403", async () => {
     as(acmeHm);
-    expect((await handleAtsApply(jobId)).status).toBe(403);
+    expect((await saveAts(jobId)).status).toBe(403);
   });
   it("create batch -> 403", async () => {
     as(acmeHm);
@@ -166,7 +172,7 @@ describe("other company", () => {
   });
   it("cannot run ATS or create a batch on an Acme job", async () => {
     as(otherAdmin);
-    expect((await handleAtsApply(jobId)).status).toBe(404);
+    expect((await saveAts(jobId)).status).toBe(404);
     expect((await handleCreateBatch(jsonReq({ job_id: jobId }))).status).toBe(404);
   });
   it("bad job ids are 404", async () => {
@@ -323,11 +329,10 @@ describe("ATS filter + batches", () => {
   });
 
   it("ats_filter marks those outside top pct (with rescue lane) as ats_filtered", async () => {
-    await service.from("jobs").update({ ats_mode: "ats_filter", ats_top_pct: 30, ats_rescue: true }).eq("id", jobId);
     as(acmeAdmin);
-    const res = await handleAtsApply(jobId);
+    const res = await saveAts(jobId, { ats_mode: "ats_filter", ats_top_pct: 30, ats_rescue: true });
     expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ mode: "ats_filter", cutoff: 85, filtered: 5, rescued: 2 });
+    expect((await res.json()).ats).toMatchObject({ mode: "ats_filter", cutoff: 85, filtered: 5, rescued: 2 });
     const { data } = await service.from("candidates").select("id, status").in("id", ids);
     const st = new Map((data ?? []).map((r) => [r.id, r.status]));
     expect(ids.map((id) => st.get(id))).toEqual([
@@ -368,9 +373,8 @@ describe("ATS filter + batches", () => {
   });
 
   it("call_everyone restores filtered candidates", async () => {
-    await service.from("jobs").update({ ats_mode: "call_everyone" }).eq("id", jobId);
     as(acmeAdmin);
-    expect(await (await handleAtsApply(jobId)).json()).toMatchObject({ filtered: 0 });
+    expect((await (await saveAts(jobId, { ats_mode: "call_everyone" })).json()).ats).toMatchObject({ mode: "call_everyone", filtered: 0 });
     const { data } = await service.from("candidates").select("status").in("id", ids.slice(5));
     expect((data ?? []).every((r) => r.status === "imported")).toBe(true);
   });
